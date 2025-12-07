@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, GripVertical, Download, Image as ImageIcon } from 'lucide-react';
+import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, GripVertical, Download, Image as ImageIcon, List } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 // --- 翻译配置 (Translations) ---
@@ -49,7 +49,12 @@ const TRANSLATIONS = {
     category_action: "动作 (Action)",
     category_location: "地点 (Location)",
     category_visual: "画面 (Visuals)",
-    category_other: "其他 (Other)"
+    category_other: "其他 (Other)",
+    manage_categories: "管理分类",
+    add_category: "新增分类",
+    category_name_placeholder: "分类名称",
+    delete_category_confirm: "确定要删除分类“{{name}}”吗？该分类下的词库将归为“其他”。",
+    edit_category: "编辑分类"
   },
   en: {
     template_management: "Templates",
@@ -96,17 +101,22 @@ const TRANSLATIONS = {
     category_action: "Action",
     category_location: "Location",
     category_visual: "Visuals",
-    category_other: "Other"
+    category_other: "Other",
+    manage_categories: "Manage Categories",
+    add_category: "Add Category",
+    category_name_placeholder: "Category Name",
+    delete_category_confirm: "Delete category “{{name}}”? Banks will be moved to 'Other'.",
+    edit_category: "Edit Category"
   }
 };
 
-const CATEGORIES = {
-  character: { id: "character", color: "blue", t_key: "category_character" },
-  item: { id: "item", color: "amber", t_key: "category_item" },
-  action: { id: "action", color: "rose", t_key: "category_action" },
-  location: { id: "location", color: "emerald", t_key: "category_location" },
-  visual: { id: "visual", color: "violet", t_key: "category_visual" },
-  other: { id: "other", color: "slate", t_key: "category_other" }
+const INITIAL_CATEGORIES = {
+  character: { id: "character", label: "人物 (CHARACTER)", color: "blue" },
+  item: { id: "item", label: "物品 (ITEM)", color: "amber" },
+  action: { id: "action", label: "动作 (ACTION)", color: "rose" },
+  location: { id: "location", label: "地点 (LOCATION)", color: "emerald" },
+  visual: { id: "visual", label: "画面 (VISUALS)", color: "violet" },
+  other: { id: "other", label: "其他 (OTHER)", color: "slate" }
 };
 
 const CATEGORY_STYLES = {
@@ -534,7 +544,7 @@ const Variable = ({ id, index, config, currentVal, isOpen, onToggle, onSelect, o
 };
 
 // --- Visual Editor Component (New) ---
-const VisualEditor = React.forwardRef(({ value, onChange, banks }, ref) => {
+const VisualEditor = React.forwardRef(({ value, onChange, banks, categories }, ref) => {
   const preRef = useRef(null);
 
   const handleScroll = (e) => {
@@ -551,7 +561,7 @@ const VisualEditor = React.forwardRef(({ value, onChange, banks }, ref) => {
          const key = part.slice(2, -2).trim();
          const bank = banks[key];
          const categoryId = bank?.category || 'other';
-         const colorKey = CATEGORIES[categoryId]?.color || 'slate';
+         const colorKey = categories[categoryId]?.color || 'slate';
          const style = CATEGORY_STYLES[colorKey];
          
          // Style needs to match font metrics exactly, so avoid padding/border that adds width
@@ -593,12 +603,12 @@ const VisualEditor = React.forwardRef(({ value, onChange, banks }, ref) => {
 });
 
 // --- 组件：可折叠的词库组 ---
-const BankGroup = ({ bankKey, bank, onInsert, onDeleteOption, onAddOption, onDeleteBank, onUpdateBankCategory, t }) => {
+const BankGroup = ({ bankKey, bank, onInsert, onDeleteOption, onAddOption, onDeleteBank, onUpdateBankCategory, categories, t }) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [isEditingCategory, setIsEditingCategory] = useState(false);
 
     const categoryId = bank.category || 'other';
-    const colorKey = CATEGORIES[categoryId]?.color || 'slate';
+    const colorKey = categories[categoryId]?.color || 'slate';
     const style = CATEGORY_STYLES[colorKey];
 
     const handleDragStart = (e) => {
@@ -676,8 +686,8 @@ const BankGroup = ({ bankKey, bank, onInsert, onDeleteOption, onAddOption, onDel
                                 className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {Object.values(CATEGORIES).map(cat => (
-                                    <option key={cat.id} value={cat.id}>{t(cat.t_key)}</option>
+                                {Object.values(categories).map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -726,11 +736,161 @@ const BankGroup = ({ bankKey, bank, onInsert, onDeleteOption, onAddOption, onDel
     );
 };
 
+// --- Modal: Category Manager ---
+const CategoryManager = ({ isOpen, onClose, categories, setCategories, banks, setBanks, t }) => {
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatColor, setNewCatColor] = useState("slate");
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [tempCatName, setTempCatName] = useState("");
+  
+  const availableColors = Object.keys(CATEGORY_STYLES);
+
+  if (!isOpen) return null;
+
+  const handleAddCategory = () => {
+    if (!newCatName.trim()) return;
+    const newId = `cat_${Date.now()}`;
+    
+    setCategories(prev => ({
+      ...prev,
+      [newId]: { id: newId, label: newCatName, color: newCatColor }
+    }));
+    setNewCatName("");
+    setNewCatColor("slate");
+  };
+
+  const handleDeleteCategory = (catId) => {
+    if (catId === 'other') return; // Cannot delete default
+    
+    const catName = categories[catId].label;
+    if (window.confirm(t('delete_category_confirm', { name: catName }))) {
+       // 1. Update banks to use 'other'
+       const updatedBanks = { ...banks };
+       Object.keys(updatedBanks).forEach(key => {
+           if (updatedBanks[key].category === catId) {
+               updatedBanks[key].category = 'other';
+           }
+       });
+       setBanks(updatedBanks);
+
+       // 2. Remove category
+       const updatedCats = { ...categories };
+       delete updatedCats[catId];
+       setCategories(updatedCats);
+    }
+  };
+
+  const startEditing = (cat) => {
+      setEditingCatId(cat.id);
+      setTempCatName(cat.label);
+  };
+
+  const saveEditing = () => {
+      if (!tempCatName.trim()) return;
+      setCategories(prev => ({
+          ...prev,
+          [editingCatId]: { ...prev[editingCatId], label: tempCatName }
+      }));
+      setEditingCatId(null);
+  };
+
+  const changeColor = (catId, color) => {
+      setCategories(prev => ({
+          ...prev,
+          [catId]: { ...prev[catId], color }
+      }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+            <List size={18} /> {t('manage_categories')}
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded text-gray-500"><X size={18}/></button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+           {/* Add New */}
+           <div className="flex gap-2 items-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <input 
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder={t('category_name_placeholder')}
+                className="flex-1 text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500"
+              />
+              <select 
+                value={newCatColor}
+                onChange={(e) => setNewCatColor(e.target.value)}
+                className="text-sm border border-gray-300 rounded px-2 py-1.5 bg-white"
+              >
+                {availableColors.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <button 
+                onClick={handleAddCategory}
+                disabled={!newCatName.trim()}
+                className="p-1.5 bg-indigo-600 text-white rounded disabled:opacity-50 hover:bg-indigo-700"
+              >
+                <Plus size={16} />
+              </button>
+           </div>
+
+           {/* List */}
+           <div className="space-y-2">
+             {Object.values(categories).map(cat => (
+               <div key={cat.id} className="flex items-center gap-2 p-2 border border-gray-100 rounded bg-white hover:border-gray-200 transition-colors">
+                  <div className={`w-3 h-3 rounded-full ${CATEGORY_STYLES[cat.color].dotBg}`}></div>
+                  
+                  {editingCatId === cat.id ? (
+                      <input 
+                        autoFocus
+                        value={tempCatName}
+                        onChange={(e) => setTempCatName(e.target.value)}
+                        onBlur={saveEditing}
+                        onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
+                        className="flex-1 text-sm border border-indigo-300 rounded px-1 py-0.5 outline-none"
+                      />
+                  ) : (
+                      <span className="flex-1 text-sm font-medium text-gray-700 truncate">{cat.label}</span>
+                  )}
+
+                  <div className="flex items-center gap-1">
+                      {/* Color Picker */}
+                      <div className="relative group/color">
+                          <div className={`w-5 h-5 rounded cursor-pointer border border-gray-200 ${CATEGORY_STYLES[cat.color].bg}`}></div>
+                          <div className="absolute right-0 top-full mt-1 hidden group-hover/color:grid grid-cols-5 gap-1 p-2 bg-white border border-gray-200 shadow-lg rounded z-10 w-32">
+                              {availableColors.map(c => (
+                                  <div 
+                                    key={c} 
+                                    onClick={() => changeColor(cat.id, c)}
+                                    className={`w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform ${CATEGORY_STYLES[c].dotBg}`}
+                                    title={c}
+                                  />
+                              ))}
+                          </div>
+                      </div>
+
+                      <button onClick={() => startEditing(cat)} className="p-1 text-gray-400 hover:text-indigo-600 rounded"><Pencil size={14}/></button>
+                      {cat.id !== 'other' && (
+                          <button onClick={() => handleDeleteCategory(cat.id)} className="p-1 text-gray-400 hover:text-red-500 rounded"><Trash2 size={14}/></button>
+                      )}
+                  </div>
+               </div>
+             ))}
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   // Global State with Persistence
   const [banks, setBanks] = useStickyState(INITIAL_BANKS, "app_banks_v4"); 
   const [defaults, setDefaults] = useStickyState(INITIAL_DEFAULTS, "app_defaults_v4");
   const [language, setLanguage] = useStickyState("cn", "app_language_v1"); 
+  const [categories, setCategories] = useStickyState(INITIAL_CATEGORIES, "app_categories_v1"); // New state
   
   const [templates, setTemplates] = useStickyState(INITIAL_TEMPLATES, "app_templates_v4");
   const [activeTemplateId, setActiveTemplateId] = useStickyState("tpl_default", "app_active_template_id_v2");
@@ -743,6 +903,7 @@ const App = () => {
   const [activePopover, setActivePopover] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false); // New UI state
   
   // Add Bank State
   const [isAddingBank, setIsAddingBank] = useState(false);
@@ -766,6 +927,13 @@ const App = () => {
     });
     return str;
   };
+
+  // Fix initial categories if empty (migration safety)
+  useEffect(() => {
+      if (!categories || Object.keys(categories).length === 0) {
+          setCategories(INITIAL_CATEGORIES);
+      }
+  }, []);
 
   // Derived State: Current Active Template
   const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
@@ -1273,9 +1441,18 @@ const App = () => {
         </div>
 
         <div className="p-5 border-b border-gray-100 bg-white">
-          <div className="flex items-center gap-2 mb-1">
-            <Settings className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-bold text-gray-800">{t('bank_config')}</h2>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-gray-600" />
+                <h2 className="text-lg font-bold text-gray-800">{t('bank_config')}</h2>
+            </div>
+            <button 
+                onClick={() => setIsCategoryManagerOpen(true)}
+                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                title={t('manage_categories')}
+            >
+                <List size={18} />
+            </button>
           </div>
           <p className="text-xs text-gray-500">{t('bank_subtitle')}</p>
         </div>
@@ -1289,18 +1466,21 @@ const App = () => {
             }}
           >
             {/* Render grouped banks */}
-            {Object.keys(CATEGORIES).map(catId => {
+            {Object.keys(categories).map(catId => {
                  const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
                  if (catBanks.length === 0) return null;
                  
-                 const catConfig = CATEGORIES[catId];
-                 const style = CATEGORY_STYLES[catConfig.color];
+                 const catConfig = categories[catId];
+                 // Fallback for deleted categories still referenced
+                 if (!catConfig) return null; 
+
+                 const style = CATEGORY_STYLES[catConfig.color] || CATEGORY_STYLES.slate;
                  
                  return (
                     <div key={catId} className="break-inside-avoid mb-6">
                         <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${style.text} flex items-center gap-1.5`}>
                            <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
-                           {t(catConfig.t_key)}
+                           {catConfig.label}
                         </h3>
                         <div>
                             {catBanks.map(([key, bank]) => (
@@ -1313,6 +1493,7 @@ const App = () => {
                                     onAddOption={handleAddOption}
                                     onDeleteBank={handleDeleteBank}
                                     onUpdateBankCategory={handleUpdateBankCategory}
+                                    categories={categories}
                                     t={t}
                                 />
                             ))}
@@ -1354,8 +1535,8 @@ const App = () => {
                                 onChange={e => setNewBankCategory(e.target.value)}
                                 className="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white"
                             >
-                                {Object.values(CATEGORIES).map(cat => (
-                                    <option key={cat.id} value={cat.id}>{t(cat.t_key)}</option>
+                                {Object.values(categories).map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -1386,6 +1567,17 @@ const App = () => {
             )}
         </div>
       </div>
+
+      {/* --- Category Manager Modal --- */}
+      <CategoryManager 
+        isOpen={isCategoryManagerOpen} 
+        onClose={() => setIsCategoryManagerOpen(false)}
+        categories={categories}
+        setCategories={setCategories}
+        banks={banks}
+        setBanks={setBanks}
+        t={t}
+      />
 
       {/* --- 3. Main Editor (Right) --- */}
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50/50 relative">
