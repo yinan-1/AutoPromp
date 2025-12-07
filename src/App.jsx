@@ -1508,50 +1508,123 @@ const App = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 pb-20">
-          <div 
-            className="grid items-start"
-            style={{ 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-                gap: '16px'
-            }}
-          >
-            {/* Render grouped banks */}
-            {Object.keys(categories).map(catId => {
-                 const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
-                 if (catBanks.length === 0) return null;
-                 
-                 const catConfig = categories[catId];
-                 // Fallback for deleted categories still referenced
-                 if (!catConfig) return null; 
+          
+          {bankSidebarWidth >= 520 ? (
+             <div className="flex gap-4 items-start">
+               {/* Left Column */}
+               <div className="flex-1 flex flex-col gap-6 min-w-0">
+                  {Object.keys(categories).filter((_, i) => i % 2 === 0).map(catId => {
+                      const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
+                      if (catBanks.length === 0) return null;
+                      
+                      const catConfig = categories[catId];
+                      if (!catConfig) return null; 
 
-                 const style = CATEGORY_STYLES[catConfig.color] || CATEGORY_STYLES.slate;
-                 
-                 return (
-                    <div key={catId} className="break-inside-avoid mb-6">
-                        <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${style.text} flex items-center gap-1.5`}>
-                           <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
-                           {catConfig.label}
-                        </h3>
-                        <div>
-                            {catBanks.map(([key, bank]) => (
-                                <BankGroup 
-                                    key={key}
-                                    bankKey={key} 
-                                    bank={bank} 
-                                    onInsert={insertVariableToTemplate}
-                                    onDeleteOption={handleDeleteOption}
-                                    onAddOption={handleAddOption}
-                                    onDeleteBank={handleDeleteBank}
-                                    onUpdateBankCategory={handleUpdateBankCategory}
-                                    categories={categories}
-                                    t={t}
-                                />
-                            ))}
+                      const style = CATEGORY_STYLES[catConfig.color] || CATEGORY_STYLES.slate;
+
+                      return (
+                        <div key={catId} className="break-inside-avoid">
+                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${style.text} flex items-center gap-1.5`}>
+                               <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
+                               {catConfig.label}
+                            </h3>
+                            <div>
+                                {catBanks.map(([key, bank]) => (
+                                    <BankGroup 
+                                        key={key}
+                                        bankKey={key} 
+                                        bank={bank} 
+                                        onInsert={insertVariableToTemplate}
+                                        onDeleteOption={handleDeleteOption}
+                                        onAddOption={handleAddOption}
+                                        onDeleteBank={handleDeleteBank}
+                                        onUpdateBankCategory={handleUpdateBankCategory}
+                                        categories={categories}
+                                        t={t}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                 );
-            })}
-          </div>
+                      );
+                  })}
+               </div>
+               
+               {/* Right Column */}
+               <div className="flex-1 flex flex-col gap-6 min-w-0">
+                  {Object.keys(categories).filter((_, i) => i % 2 === 1).map(catId => {
+                      const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
+                      if (catBanks.length === 0) return null;
+                      
+                      const catConfig = categories[catId];
+                      if (!catConfig) return null; 
+
+                      const style = CATEGORY_STYLES[catConfig.color] || CATEGORY_STYLES.slate;
+
+                      return (
+                        <div key={catId} className="break-inside-avoid">
+                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${style.text} flex items-center gap-1.5`}>
+                               <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
+                               {catConfig.label}
+                            </h3>
+                            <div>
+                                {catBanks.map(([key, bank]) => (
+                                    <BankGroup 
+                                        key={key}
+                                        bankKey={key} 
+                                        bank={bank} 
+                                        onInsert={insertVariableToTemplate}
+                                        onDeleteOption={handleDeleteOption}
+                                        onAddOption={handleAddOption}
+                                        onDeleteBank={handleDeleteBank}
+                                        onUpdateBankCategory={handleUpdateBankCategory}
+                                        categories={categories}
+                                        t={t}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                      );
+                  })}
+               </div>
+             </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+                {Object.keys(categories).map(catId => {
+                    const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
+                    if (catBanks.length === 0) return null;
+                    
+                    const catConfig = categories[catId];
+                    if (!catConfig) return null; 
+
+                    const style = CATEGORY_STYLES[catConfig.color] || CATEGORY_STYLES.slate;
+
+                    return (
+                        <div key={catId} className="break-inside-avoid">
+                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${style.text} flex items-center gap-1.5`}>
+                               <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
+                               {catConfig.label}
+                            </h3>
+                            <div>
+                                {catBanks.map(([key, bank]) => (
+                                    <BankGroup 
+                                        key={key}
+                                        bankKey={key} 
+                                        bank={bank} 
+                                        onInsert={insertVariableToTemplate}
+                                        onDeleteOption={handleDeleteOption}
+                                        onAddOption={handleAddOption}
+                                        onDeleteBank={handleDeleteBank}
+                                        onUpdateBankCategory={handleUpdateBankCategory}
+                                        categories={categories}
+                                        t={t}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+          )}
 
             {isAddingBank ? (
                 <div className="border-2 border-dashed border-indigo-200 rounded-lg p-4 bg-indigo-50/50 mt-4">
