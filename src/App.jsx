@@ -243,16 +243,7 @@ const INITIAL_BANKS = {
     category: "visual",
     options: ["全身立绘", "半身肖像", "动态战斗姿势", "背影回眸"]
   },
-  // Grid Poses (1-9) - Sharing same options initially but distinct for selection
-  grid_pose_1: { label: "静态动作 1", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_2: { label: "静态动作 2", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_3: { label: "静态动作 3", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_4: { label: "静态动作 4", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_5: { label: "静态动作 5", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_6: { label: "静态动作 6", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_7: { label: "静态动作 7", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_8: { label: "静态动作 8", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
-  grid_pose_9: { label: "静态动作 9", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
+  grid_pose: { label: "静态动作", category: "visual", options: ["前景手指虚化", "目光锁定镜头", "单色下巴托手", "透过模糊肩带拍摄", "正面特写阴影", "斜角拍摄", "双手置于锁骨", "坐姿半身侧面", "侧面微距水滴", "闭眼仰头享受", "用手遮挡阳光", "回眸一笑", "吹泡泡糖特写"] },
   
   camera_angle: {
     label: "拍摄角度",
@@ -380,15 +371,7 @@ const INITIAL_DEFAULTS = {
   toy_companion: "Labubu艺术公仔",
   
   // Grid defaults
-  grid_pose_1: "前景手指虚化",
-  grid_pose_2: "目光锁定镜头",
-  grid_pose_3: "单色下巴托手",
-  grid_pose_4: "透过模糊肩带拍摄",
-  grid_pose_5: "正面特写阴影",
-  grid_pose_6: "斜角拍摄",
-  grid_pose_7: "双手置于锁骨",
-  grid_pose_8: "坐姿半身侧面",
-  grid_pose_9: "侧面微距水滴",
+  grid_pose: "前景手指虚化",
 
   // Legacy defaults
   lens_param: "85mm, f/1.8",
@@ -442,15 +425,15 @@ const TEMPLATE_PHOTO_GRID = `### Photo Grid Composition (九宫格摄影)
 **灯光设置:** {{lighting}}。
 
 **照片细节包括 (Grid Details)：**
-1. {{grid_pose_1}}，画面风格统一 ({{lens_param}})；
-2. {{grid_pose_2}} ({{lens_param}})；
-3. {{grid_pose_3}} ({{lens_param}})；
-4. {{grid_pose_4}} ({{lens_param}})；
-5. {{grid_pose_5}} ({{lens_param}})；
-6. {{grid_pose_6}} ({{lens_param}})；
-7. {{grid_pose_7}} ({{lens_param}})；
-8. {{grid_pose_8}} ({{lens_param}})；
-9. {{grid_pose_9}} ({{lens_param}})。
+1. {{grid_pose}}，画面风格统一 ({{lens_param}})；
+2. {{grid_pose}} ({{lens_param}})；
+3. {{grid_pose}} ({{lens_param}})；
+4. {{grid_pose}} ({{lens_param}})；
+5. {{grid_pose}} ({{lens_param}})；
+6. {{grid_pose}} ({{lens_param}})；
+7. {{grid_pose}} ({{lens_param}})；
+8. {{grid_pose}} ({{lens_param}})；
+9. {{grid_pose}} ({{lens_param}})。
 
 **后期处理:** 原始素材，平滑对比度，编辑柔化效果。`;
 
@@ -976,12 +959,12 @@ const CategoryManager = ({ isOpen, onClose, categories, setCategories, banks, se
 
 const App = () => {
   // Global State with Persistence
-  const [banks, setBanks] = useStickyState(INITIAL_BANKS, "app_banks_v5"); 
-  const [defaults, setDefaults] = useStickyState(INITIAL_DEFAULTS, "app_defaults_v5");
+  const [banks, setBanks] = useStickyState(INITIAL_BANKS, "app_banks_v6"); 
+  const [defaults, setDefaults] = useStickyState(INITIAL_DEFAULTS, "app_defaults_v6");
   const [language, setLanguage] = useStickyState("cn", "app_language_v1"); 
   const [categories, setCategories] = useStickyState(INITIAL_CATEGORIES, "app_categories_v1"); // New state
   
-  const [templates, setTemplates] = useStickyState(INITIAL_TEMPLATES, "app_templates_v5");
+  const [templates, setTemplates] = useStickyState(INITIAL_TEMPLATES, "app_templates_v6");
   const [activeTemplateId, setActiveTemplateId] = useStickyState("tpl_default", "app_active_template_id_v3");
   
   // UI State
