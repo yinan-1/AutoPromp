@@ -132,7 +132,7 @@ export const MobileSettingsView = ({
         <SettingItem 
           icon={Github} 
           label={t('github_link')} 
-          onClick={() => window.open('https://github.com/TanShilongMario/PromptFill', '_blank')}
+          onClick={() => window.open('https://github.com/', '_blank')}
         />
       </SettingSection>
 
