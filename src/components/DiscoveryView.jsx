@@ -308,8 +308,9 @@ export const DiscoveryView = React.memo(({
                   <div className="flex items-center gap-3 text-[11px] font-medium text-gray-700 px-4 py-2">
                       <p>Made by CornerStudio</p>
                       <div className="w-1 h-1 rounded-full bg-gray-400" />
+                      <p>Tangm Data</p>
                       <div className="w-1 h-1 rounded-full bg-gray-400" />
-                      <p>Wechat: tanshilongmario</p>
+                      <p>Wechat: DecoryDu</p>
                       <a 
                           href="https://github.com/" 
                           target="_blank" 
