@@ -262,7 +262,7 @@ export const TemplatesSidebar = React.memo(({
               <div className="flex items-center justify-center gap-2">
                   <p>{t('author_info')}</p>
                   <a 
-                      href="https://github.com/TanShilongMario/PromptFill/" 
+                      href="https://github.com/" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-800 text-white hover:bg-orange-500 transition-all duration-300 hover:scale-110"
