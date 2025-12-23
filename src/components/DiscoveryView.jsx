@@ -311,7 +311,7 @@ export const DiscoveryView = React.memo(({
                       <div className="w-1 h-1 rounded-full bg-gray-400" />
                       <p>Wechat: tanshilongmario</p>
                       <a 
-                          href="https://github.com/TanShilongMario/PromptFill/" 
+                          href="https://github.com/" 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 text-white hover:bg-orange-500 transition-all duration-300 hover:scale-110 shadow-lg"
