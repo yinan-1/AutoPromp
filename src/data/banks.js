@@ -16,6 +16,7 @@ export const INITIAL_BANKS = {
     category: "character",
     options: [
       { cn: "游戏与动漫概念美术设计大师", en: "Master of Game and Anime Concept Art" },
+      { cn: "身份测试", en: "20251223-test" },
       { cn: "资深影视角色原画师", en: "Senior Film Character Concept Artist" },
       { cn: "赛博朋克风格设计师", en: "Cyberpunk Style Designer" },
       { cn: "暗黑幻想风格插画师", en: "Dark Fantasy Style Illustrator" }
