@@ -1,5 +1,9 @@
 # Prompt Fill (提示词填空器)
 
+[English](./README.md) | [中文](./README.md#prompt-fill-提示词填空器-1)
+
+A **structured prompt generation tool** designed specifically for AI painting (GPT, Midjourney, Nano Banana, etc.). Help users quickly build, manage, and iterate complex prompts through a visual "fill-in-the-blank" interaction.
+
 一个专为 AI 绘画（GPT、Nano Banana 等）设计的**结构化提示词生成工具**。通过可视化的"填空"交互方式，帮助用户快速构建、管理和迭代复杂的 Prompt。
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -12,287 +16,200 @@
 <img width="1343" height="612" alt="image@1x-2" src="https://github.com/user-attachments/assets/7c3d969b-7f63-46fc-a16a-e3074da6c692" />
 <img width="1343" height="620" alt="1231333" src="https://github.com/user-attachments/assets/08c90a9f-7b1e-4b3d-84fc-650bccfd1d2b" />
 
+## 📝 Foreword / 写在前面
 
-## 📝 写在前面
+**English:**
+Prompt Fill is now at version **v0.6.1**. The original intention of this project is to solve the problem of hard-to-remember, hard-to-manage, and tedious modification of prompts in the AI painting process. By structuring prompts, creation becomes as simple as "filling in the blanks".
 
+**中文：**
 Prompt Fill 现已迭代至 **v0.6.1** 版本。本项目初衷是解决 AI 绘画过程中提示词难记忆、难管理、修改繁琐的问题。通过将 Prompt 结构化，让创作变得像"填空"一样简单。
 
-### 🌟 目前进度与核心功能
-- **✅ 全面暗色模式支持**：支持桌面端与移动端的一键主题切换，夜间创作更护眼。
-- **✅ 词组联动系统**：支持变量成组联动（如 `{{color}}_1`），修改一处，全局同步，极大提升复杂模版调整效率。
-- **✅ 结构化 Prompt 引擎**：支持 `{{variable}}` 语法，自动将文本模版转化为交互式表单。
-- **✅ 动态词库系统**：预置数百个常用美术标签，支持分类管理、自定义扩充及批量导入。
-- **✅ 高清社交分享**：内置模版封面渲染，支持一键导出精美的 JPG 长图（自动提取氛围色）。
-- **✅ 模版/版本感知**：官方模版云端同步感知，无需手动刷新即可获取最新模版与功能。
-- **✅ 纯本地存储**：基于浏览器 LocalStorage，无需注册登录，数据完全掌握在自己手中。
+### 🌟 Progress & Core Features / 目前进度与核心功能
 
-## ✨ 核心特性
+*   **✅ Full Dark Mode Support**: One-click theme switching for desktop and mobile. / **全面暗色模式支持**：支持桌面端与移动端的一键主题切换。
+*   **✅ Linkage Groups**: Sync modifications globally within groups (e.g., `{{color}}_1`). / **词组联动系统**：支持变量成组联动，修改一处，全局同步。
+*   **✅ Structured Prompt Engine**: Automatic interactive form conversion via `{{variable}}`. / **结构化 Prompt 引擎**：支持 `{{variable}}` 语法，自动转化为交互式表单。
+*   **✅ Dynamic Bank System**: Preset art tags with category management and batch import. / **动态词库系统**：预置数百个常用标签，支持分类管理与批量导入。
+*   **✅ HD Social Sharing**: Export beautiful JPG long images with auto-extracted colors. / **高清社交分享**：内置模版封面渲染，支持一键导出精美 JPG 长图。
+*   **✅ Cloud Awareness**: Real-time sync for official templates and features. / **模版/版本感知**：官方模版云端同步感知，无需手动刷新。
+*   **✅ Local Storage**: Private data stored in browser LocalStorage. / **纯本地存储**：基于浏览器 LocalStorage，数据完全掌握在自己手中。
 
-*   **🧩 智能词库管理**：
-    *   **分类管理**：支持自定义词库分类（如人物、动作、画面、物品等），并通过颜色区分，视觉更清晰。
-    *   **双向同步**：在右侧预览填空时，可直接添加"自定义选项"，自动反向同步到左侧词库中，无需来回切换。
-    *   **分类编辑器**：内置分类管理器，支持增删改分类及其颜色配置（12种预设颜色）。
-    *   **响应式布局**：词库列表支持瀑布流式多列布局，空间利用更高效。
+---
 
-*   **📝 多模版系统**：
-    *   支持创建多个独立的 Prompt 模版（如"角色概念分解图"、"3x3 摄影网格"）。
-    *   **独立状态**：每个模版的变量选择（Selection）互不干扰。
-    *   **副本克隆**：支持一键创建模版副本，方便进行 A/B 测试或微调。
+## ✨ Core Features / 核心特性
 
-*   **🖱️ 可视化交互**：
-    *   **所见即所得编辑**：编辑模式下变量根据分类颜色高亮显示，支持直接文本编辑与结构调整。
-    *   **成组联动 (Linkage Groups)**：在编辑器中可为变量设置联动组（如 `1`, `2` 等）。具有相同基础变量名且在同一组的变量（例如两个 `{{style}}` 都设为组 1）将自动保持值同步，适合需要多处保持一致的复杂场景。
-    *   **拖拽插入**：直接将左侧词库卡片拖入编辑区域，即可快速插入变量。
-    *   **预览模式**：模版中的变量（`{{role}}`）会自动渲染为可点击的下拉菜单。
-    *   **独立实例**：同一变量在模版中出现多次（如 `{{color}}`），可分别选择不同的值（支持 `color-0`, `color-1` 独立索引）。
+### 🧩 Intelligent Bank Management / 智能词库管理
+*   **Category Management**: Color-coded categories (e.g., characters, actions) for visual clarity. / **分类管理**：支持自定义分类并通过颜色区分，视觉更清晰。
+*   **Bidirectional Sync**: Directly add custom options in preview to sync back to the bank. / **双向同步**：预览填空时可直接添加"自定义选项"，自动同步到词库。
+*   **Category Editor**: Manage categories and 12 preset colors. / **分类编辑器**：内置分类管理器，支持颜色配置。
+*   **Responsive Layout**: Efficient masonry multi-column layout. / **响应式布局**：词库列表支持瀑布流式多列布局。
 
-*   **💾 自动持久化**：
-    *   利用 LocalStorage 自动保存所有修改（模版、词库、分类配置）。
-    *   刷新页面或关闭浏览器后，数据不会丢失。
+### 📝 Multi-Template System / 多模版系统
+*   **Independent Templates**: Create separate prompt templates for different use cases. / **独立模版**：支持创建多个独立的 Prompt 模版。
+*   **Isolated State**: Variable selections are independent per template. / **独立状态**：每个模版的变量选择互不干扰。
+*   **Clone/Copy**: One-click duplication for A/B testing. / **副本克隆**：支持一键创建模版副本，方便进行 A/B 测试。
 
-*   **🖼️ 图像管理**：
-    *   **预览图展示**：每个模版支持关联预览图，显示在模版标题区域，视觉效果更丰富。
-    *   **自定义上传**：支持上传自定义图片替换默认预览图（支持 jpg、png、webp 等格式）。
-    *   **图片操作**：悬停在图片上时显示操作按钮：查看大图、上传新图、重置默认图。
-    *   **大图预览**：点击查看大图按钮，可在 Lightbox 模式下全屏浏览图片。
-    *   **装饰背景**：预览图会作为模糊背景显示在模版顶部，营造沉浸式氛围。
+### 🖱️ Visual Interaction / 可视化交互
+*   **WYSIWYG Editing**: Highlighting variables by category color during editing. / **所见即所得编辑**：编辑模式下变量根据分类颜色高亮显示。
+*   **Linkage Groups**: Sync same variables in designated groups. / **成组联动 (Linkage Groups)**：设置联动组，具有相同组号的变量自动保持同步。
+*   **Drag & Drop**: Insert variables by dragging bank cards. / **拖拽插入**：直接将词库卡片拖入编辑区域即可快速插入。
+*   **Preview Mode**: Templates render variables as clickable dropdowns. / **预览模式**：模版中的变量自动渲染为可点击的下拉菜单。
+*   **Multi-Instance**: Multiple occurrences of the same variable work independently. / **独立实例**：同一变量在模版中出现多次时可分别选择不同值。
 
-*   **📋 导出与分享**：
-    *   **一键复制**：复制最终生成的纯净 Prompt 文本。
-    *   **保存长图**：支持将当前填好内容的 Prompt 模版导出为高清图片，方便分享与存档。
+### 💾 Auto Persistence / 自动持久化
+*   Changes are automatically saved to LocalStorage. / 利用 LocalStorage 自动保存所有修改。
+*   No data loss on refresh or browser close. / 刷新页面或关闭浏览器后数据不会丢失。
 
-## 🛠️ 技术栈
+### 🖼️ Image Management / 图像管理
+*   **Preview Images**: Templates support associated preview images. / **预览图展示**：每个模版支持关联预览图。
+*   **Custom Upload**: Replace default previews with your own images. / **自定义上传**：支持上传自定义图片替换默认预览图。
+*   **Image Actions**: Hover for large view, upload, or reset. / **图片操作**：悬停显示操作按钮：查看大图、上传、重置。
+*   **Ambient Background**: Blurry background effect at the top. / **装饰背景**：预览图作为模糊背景显示在模版顶部。
 
-*   **构建工具**: [Vite](https://vitejs.dev/)
-*   **前端框架**: [React](https://react.dev/)
-*   **样式库**: [Tailwind CSS](https://tailwindcss.com/)
-*   **图标库**: [Lucide React](https://lucide.dev/)
-*   **导出工具**: [html2canvas](https://html2canvas.hertzen.com/)
+### 📋 Export & Share / 导出与分享
+*   **One-click Copy**: Copy clean generated prompt text. / **一键复制**：复制最终生成的纯净 Prompt 文本。
+*   **Save Long Image**: Export HD JPGs for archiving and sharing. / **保存长图**：将填好的模版导出为高清图片，方便分享。
 
-## 🚀 快速开始
+---
 
-### 前置要求
-确保您的环境已安装 [Node.js](https://nodejs.org/) (推荐 v18+)。
+## 🛠️ Tech Stack / 技术栈
 
-### 安装与运行
+*   **Build Tool**: [Vite](https://vitejs.dev/)
+*   **Frontend**: [React](https://react.dev/)
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+*   **Icons**: [Lucide React](https://lucide.dev/)
+*   **Export**: [html2canvas](https://html2canvas.hertzen.com/)
 
-1.  **克隆项目**
+---
+
+## 🚀 Quick Start / 快速开始
+
+### Prerequisites / 前置要求
+Node.js v18+ is recommended. / 推荐使用 Node.js v18+。
+
+### Installation / 安装与运行
+
+1.  **Clone / 克隆项目**
     ```bash
     git clone https://github.com/TanShilongMario/PromptFill.git
     cd PromptFill
     ```
-
-2.  **安装依赖**
+2.  **Install / 安装依赖**
     ```bash
     npm install
     ```
-
-3.  **启动开发服务器**
+3.  **Dev / 启动开发服务器**
     ```bash
     npm run dev
     ```
-    会自动打开浏览器访问 `http://localhost:5173`。
-
-4.  **构建生产版本**
+4.  **Build / 构建生产版本**
     ```bash
     npm run build
     ```
 
-### 快捷启动脚本
-项目根目录下提供了快捷脚本，双击即可一键启动服务并打开浏览器：
+### Shortcut Scripts / 快捷启动脚本
 *   **macOS**: `start.command`
 *   **Windows**: `start.bat`
 
-## 📖 使用指南
+---
 
-### 第一步：管理分类 (Categories)
-*   点击左侧面板顶部的"管理分类"按钮。
-*   在此处您可以添加新分类、修改现有分类名称或颜色（支持12种预设颜色），以及删除不需要的分类。
-*   每个分类都有独特的颜色标识，帮助您在编辑和预览时快速识别不同类型的变量。
+## 📖 Usage Guide / 使用指南
 
-### 第二步：创建词库 (Banks)
-*   点击"创建新变量组"添加新的变量词库，并为其指定分类。
-*   在词库卡片中添加具体选项：
-    *   **单个添加**：直接输入选项并按回车。
-    *   **批量添加**：输入多个选项（一行一个），系统会自动分割添加。
-*   词库支持拖拽功能，可直接拖入编辑器快速插入变量。
+### 1. Manage Categories / 管理分类
+Manage categories and colors at the top of the left panel. Each category has a unique color for quick identification. / 点击左侧面板顶部的"管理分类"，添加或修改分类及其颜色。
 
-### 第三步：编辑模版 (Templates)
-*   点击右上角的"编辑模版"按钮进入可视化编辑模式。
-*   **拖拽插入**：按住左侧的词库卡片，拖入编辑器即可插入变量（如 `{{weather}}`）。
-*   **手动输入**：也可以直接在编辑器中输入 `{{变量名}}`，系统会自动识别并渲染。
-*   编辑器中的变量会根据其所属分类显示对应颜色，方便识别和管理。
-*   支持撤销/重做功能，随时调整模版结构。
+### 2. Create Banks / 创建词库
+Create "Variable Groups" and add options (single or batch). Cards can be dragged into the editor. / 点击"创建新变量组"添加词库，支持单条或批量添加选项。
 
-### 第四步：预览与生成
-*   切换回"预览交互"模式。
-*   点击彩色的变量词，从下拉菜单中选择选项。
-*   **自定义选项**：如果选项不存在，点击下拉菜单底部的"+ 添加自定义选项"，输入并回车即可直接选用并自动保存到词库。
-*   **多实例支持**：同一变量在模版中出现多次时（如 `{{color}}`），每个实例可以独立选择不同的值。
+### 3. Edit Templates / 编辑模版
+Use "Edit Template" to enter visual mode. Supports drag-and-drop insertion, manual `{{variable}}` input, and Undo/Redo. / 点击"编辑模版"进入可视化编辑模式，支持拖拽插入或手动输入变量。
 
-### 第五步：管理模版图片（可选）
-*   **查看预览图**：如果模版关联了预览图，会显示在模版标题右上角，同时作为模糊背景装饰顶部区域。
-*   **上传自定义图片**：
-    1.  将鼠标悬停在预览图上，会显示三个操作按钮。
-    2.  点击中间的"上传图片"按钮（图片图标）。
-    3.  选择本地图片文件（支持 jpg、png、gif、webp 等格式）。
-    4.  图片会自动上传并替换当前预览图。
-*   **查看大图**：点击左侧的"查看大图"按钮（放大图标），可在全屏模式下浏览图片细节。
-*   **重置图片**：点击右侧的"重置默认图片"按钮（撤销图标），可恢复模版的默认预览图。
+### 4. Preview & Generate / 预览与生成
+Switch to "Preview Interaction". Select options from dropdowns. Use "+ Add Custom Option" to save new values directly. / 切换回"预览交互"模式，点击变量选择选项，支持直接添加新选项到词库。
 
-### 第六步：导出与分享
-*   **复制结果**：点击右上角的"复制结果"按钮，一键复制最终生成的纯净 Prompt 文本，可直接粘贴到 AI 绘画工具中使用。
-*   **保存长图**：点击"保存长图"按钮，将当前填好的 Prompt 模版（包括预览图）导出为高清图片（PNG格式），方便分享、存档或作为参考。导出前会等待封面图加载并进行 Base64 预取，避免出现空白封面。
-*   **导入 / 导出（Beta）**：支持导入/导出模版与词库为 JSON。导入前建议手动备份，导入后系统模版将自动合并、用户数据保留。
+### 5. Manage Images / 管理模版图片
+Hover over preview images to view large versions, upload custom images, or reset to default. / 悬停在预览图上可查看大图、上传自定义图或重置默认图。
 
-## 💡 使用技巧
-
-1.  **批量创建词库**：在添加选项时，可以一次性输入多行文本，系统会自动按行分割成多个选项。
-2.  **模版副本功能**：在测试不同 Prompt 效果时，使用"创建副本"功能可以保留原模版，方便对比。
-3.  **颜色编码系统**：为不同类型的变量设置不同颜色，可以让复杂的模版结构更加清晰易读。
-4.  **多实例独立选择**：当同一个变量在模版中出现多次时，系统会自动为它们分配独立的索引（如 `color-0`, `color-1`），每个位置可以选择不同的值。
-5.  **自定义预览图**：为模版上传有代表性的参考图片，可以帮助快速识别不同模版的用途，也让导出的长图更具视觉吸引力。
-6.  **图片尺寸建议**：上传的预览图建议尺寸为 300x300px 左右的正方形或竖图，这样能在界面中获得最佳显示效果。
-7.  **本地数据安全**：所有数据（包括上传的图片）都存储在浏览器本地，定期导出备份可以避免数据丢失。
-8.  **标签化检索**：为模版打标签后，可在列表中按标签筛选快速定位。
-9.  **瀑布流浏览**：模版列表支持瀑布流展示，多张封面浏览更高效。
-10. **导入/导出（Beta）**：可一键导出全部模版/词库为 JSON，或导入他人配置；导入前建议先手动备份。
-11. **多源图片上传**：新建或编辑模版时，支持本地文件与图片 URL；如需最佳导出效果，推荐使用同源的 `public/` 内图片路径。
-12. **本地化存储**：默认使用浏览器本地存储保存模版、词库及图片；如需跨设备同步，请配合导入/导出。
-
-## 🗺️ 路线图 (Roadmap)
-
-我们正致力于不断优化和扩展 Prompt Fill 的功能，以下是未来的更新计划：
-
-*   **🚀 产品应用化**：
-    *   开发 iOS 原生应用，提供更好的移动端交互体验。
-    *   推出桌面端软件（Electron/Tauri），实现完全不依赖网络的本地化环境，确保隐私与极致性能。
-*   **🤝 模版生态社区**：
-    *   支持模版一键分享与在线导入，构建属于 Prompt 创作者的共享社区。
-*   **🤖 AI 智能赋能**：
-    *   **词库扩充**：接入 AI 自动生成并扩充相关变量的候选项。
-    *   **提示词重组**：支持 AI 对已有提示词进行结构化拆解与一键优化重组。
-*   **✨ 深度体验优化**：
-    *   更多高质量内置模版持续更新。
-    *   引入更先进的模版分类与标签管理模式，支持无限层级的词库组织。
-
-## 📝 更新日志
-
-### Version 0.6.1 (2025-12-26)
-*   **🔗 联动组逻辑修复**：修复了联动组匹配过于宽松的 Bug，现在仅限相同组号的相同变量联动，避免了 `_1` 和 `_2` 组互相影响。
-*   **🆙 全站版本号对齐**：同步升级了浏览器标题、桌面端/移动端设置页面、模版预览页等各处的版本号标识。
-*   **🎨 UI 细节微调**：优化了暗色模式下的部分图标对比度及 UI 交互反馈。
-
-### Version 0.6.0 (2025-12-25)
-*   **🎨 UI 全面升级与暗色模式**：
-    *   **全站暗色模式**：引入了精心设计的深色主题，支持桌面端（侧边栏切换）与移动端（底部 Tab 切换）。
-    *   **极简重构**：侧边栏采用 Morandi 色系重构，模版列表引入极简标签与搜索框，视觉更优雅。
-    *   **圣诞限定彩蛋**：侧边栏 Logo 戴上了可爱的圣诞帽（仅限桌面端），陪伴您的节日创作。
-*   **🔗 词组联动功能上线**：
-    *   **同步修改**：支持在编辑器中设置联动组。当一个变量被修改时，同一组内的所有相同变量会自动同步更新。
-    *   **可视化标识**：预览模式下，联动组变量右上角会有醒目的数字角标。
-*   **📱 移动端深度优化**：
-    *   **设置页适配**：移动端设置页面全面适配暗色模式，包括微信反馈弹窗。
-    *   **图标美化**：亮色模式下图标颜色加深，暗色模式下对比度优化，视觉更清晰。
-*   **🐞 Bug 修复与体验提升**：
-    *   **导出稳定性**：修复了导出长图时可能出现的样式偏移与文字截断问题。
-    *   **代码清理**：移除了移动端设置页面的冗余闭合标签，修复了潜在的语法错误。
-    *   **存储优化**：优化了 LocalStorage 在极端情况下的写入稳定性。
-
-### Version 0.5.1 (2025-12-22)
-*   **📱 移动端交互大革新**：
-    *   **沉浸式详情页**：针对手机端重新设计了图片预览与卡片交互，支持上下滑动切换卡片状态。
-    *   **侧滑抽屉菜单**：引入双侧滑抽屉设计，模版列表与词库列表在编辑模式下可随手唤出。
-    *   **陀螺仪 3D 效果**：在移动端详情页，图片支持随手机陀螺仪动态调整透视，带来真实照片般的质感。
-    *   **独立设置中心**：为移动端打造了全屏设置页面，集成系统参数、更新日志及作者联系方式。
-*   **⚡ 性能与稳定性优化**：
-    *   **Mesh Gradient 背景**：首页引入高性能网格渐变（Mesh Gradient）替代传统的毛玻璃背景，彻底解决了复杂渲染时的闪烁与撕裂问题。
-    *   **平滑滚动逻辑**：海报模式自动滚动升级为 `requestAnimationFrame`，实现 60FPS 的极致丝滑感。
-    *   **内存管理增强**：当打开图片详情时，自动卸载并隐藏底层复杂的瀑布流组件，大幅降低 GPU 负载。
-*   **🛠️ 智能数据合并**：
-    *   **平滑升级机制**：优化了数据迁移逻辑，支持在系统更新时自动识别并合并用户自定义选项，而非简单的覆盖或冗余备份。
-    *   **多图模版支持**：底层架构现已支持单个模版配置多张预览图。
-
-### Version 0.5.0 (2025-12-20)
-*   **🏗️ 深度架构重构**：
-    *   **组件化解耦**：将巨型 `App.jsx` 拆分为 `DiscoveryView` (发现视图)、`TemplatesSidebar` (模版侧边栏)、`BanksSidebar` (词库侧边栏) 等多个独立组件，大幅提升代码可维护性。
-    *   **性能飞跃**：通过 `React.memo` 和全局状态优化，显著减少了无效重渲染，解决了在某些浏览器下的“闪屏”和“跳动”问题。
-    *   **资源调度**：引入了后台任务智能调度，当界面处于编辑模式时自动暂停瀑布流滚动等高负载动效，降低 GPU 占用。
-*   **🎨 全新交互体验**：
-    *   **独立发现页**：引入全新的“发现视图” (Discovery View)，作为应用的门户，以瀑布流形式展示所有模版及其精美封面。
-    *   **抽屉式悬浮**：优化了发现页的 Hover 效果，采用底部“抽屉式”升起的磨砂玻璃标签，视觉更轻量。
-    *   **全功能工具栏**：侧边栏找回了排序、刷新、语言切换及设置工具，并新增了醒目的“回到主页”快捷按钮。
-*   **📸 导出功能增强**：
-    *   **宽度优化**：将导出长图的宽度从 `600px` 提升至 `860px`，适配更复杂的提示词排版，减少换行。
-    *   **文字美化**：优化了导出图片中的变量胶囊样式，确保文字清晰度与 UI 质感的一致性。
-    *   **稳定性修复**：彻底解决了导出时正文内容可能遗漏的问题。
-*   **🔔 模版更新感知**：
-    *   新增模版/应用双重版本校验，云端更新实时弹窗提醒，支持一键无损同步。
-*   **✨ 新模版补充**：
-    *   新增“雨滴定格艺术”“可视化艺术成长之路”等高分模版及配套词库。
-
-### Version 0.4.1 (2025-12-12)
-*   **导出功能优化**：
-    *   导出格式改为 JPG（92% 质量），文件大小减少 60-70%
-    *   添加模糊背景框，从模板图片自动提取颜色，视觉效果更高级
-    *   重构导出布局：图片移至顶部（限高 300px），标题简洁（移除版本号和标签），正文不重复标题，底部统一显示版本号和二维码
-    *   导出按钮支持加载状态显示（"导出中..."），防止重复点击
-    *   网址字体与整体风格统一协调
-    *   优化导出尺寸：降低 scale（3.0 → 2.5），减小内边距，整体图片尺寸减少 30-40%
-*   **移动端体验提升**：
-    *   导入模板使用 Toast 通知替代 alert，更友好
-    *   完整备份导入显示详细确认对话框（模板数量、词库数量、分类数量）
-    *   添加导入加载状态和进度反馈
-    *   修复手机端导入文件后无反馈的问题
-*   **细节改进**：
-    *   导出图片中的变量胶囊添加轻微阴影，更立体
-    *   版本号动态获取，支持持续升级
-    *   底部水印优化，移除冗余标签
-
-### Version 0.4.0 (2025-12-10)
-*   **模版体验**：新增瀑布流展示、标签过滤；支持导入/导出（Beta）；新建模版可上传本地或 URL 图片。
-*   **数据存储**：默认本地化保存模版与词库，支持一键刷新系统模版/词库并保留用户自定义。
-*   **导出改进**：长图导出等待图片加载并进行 Base64 预取，避免封面空白。
-*   **新模版/词库**：新增“经典场景微缩复刻”“可视化企业成长之路”等模版；补充公司、画幅比例、渲染风格（3D 像素）等词库。
-*   **工程与启动**：`start.bat` 与启动脚本兼容性修复；浏览器自动打开逻辑优化。
-
-### Version 0.3.0 (2025-12-08)
-*   **UI 优化**：
-    *   优化"新建模版"按钮样式，采用统一的 Premium Button 设计语言，提升整体视觉一致性
-    *   按钮增加悬停渐变效果和阴影动画，交互体验更加流畅
-*   **功能说明**：
-    *   完善图像上传和展示功能的文档说明
-    *   支持自定义上传模版预览图
-    *   图片悬停操作：查看大图、上传新图、重置默认图
-    *   Lightbox 全屏图片预览模式
-*   **文档完善**：
-    *   重构使用指南，采用分步骤的结构化说明
-    *   新增"使用技巧"章节，提供最佳实践建议（包括图片使用建议）
-    *   新增更新日志，记录版本迭代历史
-    *   补充图像管理功能的详细说明
-
-### Version 0.2.0
-*   增加模版导出长图功能
-*   支持自定义分类颜色配置
-*   优化响应式布局体验
-*   修复多个已知问题
-
-### Version 0.1.0
-*   初始版本发布
-*   基础的模版管理功能
-*   词库创建与编辑功能
-*   变量填空交互系统
-
-## 🤝 贡献
-
-欢迎提交 Issue 或 Pull Request 来改进这个项目！
-
-如果您有任何建议或发现了 Bug，请随时在 [GitHub Issues](https://github.com/TanShilongMario/PromptFill/issues) 中告诉我们。
-
-## 📄 许可证
-
-本项目采用 [MIT 许可证](LICENSE)。
+### 6. Export & Share / 导出与分享
+Copy the final prompt or save as a long image. JSON Import/Export is available for backup. / 复制生成的结果或保存为长图。支持 JSON 导入/导出。
 
 ---
 
+## 💡 Tips / 使用技巧
+
+1.  **Batch Creation**: Input multiple lines to add multiple options at once. / **批量创建**：添加选项时可一次输入多行。
+2.  **Clone Templates**: Duplicate templates for A/B testing. / **模版副本**：使用副本功能进行对比测试。
+3.  **Color Coding**: Use distinct colors for complex template structures. / **颜色编码**：为不同变量设色使结构清晰。
+4.  **Multi-Instance**: Multiple same variables are assigned unique indices (e.g., `color-0`). / **多实例**：同名变量会自动分配独立索引。
+5.  **Custom Previews**: Uploading representative images helps identification. / **自定义预览**：上传参考图有助于快速识别。
+6.  **Image Specs**: Square or vertical images around 300px are recommended. / **图片建议**：推荐 300px 左右的正方形或竖图。
+7.  **Data Safety**: Regularly export JSON as data is local to the browser. / **数据安全**：所有数据存储在本地，建议定期导出备份。
+8.  **Tags & Search**: Use tags to filter and locate templates quickly. / **标签化检索**：通过标签快速定位模版。
+9.  **Masonry View**: Efficiently browse covers in the template list. / **瀑布流浏览**：多张封面浏览更高效。
+10. **Import/Export (Beta)**: Backup or share via one-click JSON export. / **导入/导出**：一键备份或共享 JSON。
+11. **Multi-source Upload**: Supports local files and URLs for images. / **多源上传**：支持本地文件与图片 URL。
+12. **Local Focus**: Sync across devices manually using JSON files. / **本地化存储**：跨设备同步请配合导入/导出。
+
+---
+
+## 🗺️ Roadmap / 路线图
+
+*   **🚀 Application / 产品应用化**: Native iOS app & Desktop version (Electron/Tauri). / iOS 原生应用与桌面端软件。
+*   **🤝 Ecosystem / 模版生态**: One-click sharing and online community. / 模版一键分享与在线社区。
+*   **🤖 AI Empowerment / AI 智能**: AI bank expansion & AI prompt reorganization. / AI 词库扩充与 AI 提示词重组优化。
+*   **✨ Deep UX / 深度优化**: More built-in templates & infinite hierarchy. / 更多高质量模版与无限层级组织。
+
+---
+
+## 📝 Change Log / 更新日志
+
+### Version 0.6.1 (2025-12-26)
+*   **🔗 Linkage Group Bug Fix**: Fixed loose matching bug in linkage groups. / **联动组逻辑修复**：修复了联动组匹配过于宽松的 Bug。
+*   **🆙 Version Alignment**: Synchronized version identifiers site-wide. / **全站版本号对齐**：同步升级了各处的版本号标识。
+*   **🎨 UI Refinement**: Optimized contrast and feedback in dark mode. / **UI 细节微调**：优化了暗色模式下的 UI 交互。
+
+### Version 0.6.0 (2025-12-25)
+*   **🎨 UI Upgrade & Dark Mode**: Full dark theme support for desktop/mobile and Xmas theme. / **UI 全面升级与暗色模式**：支持全站暗色模式及圣诞限定彩蛋。
+*   **🔗 Linkage Groups**: Synchronized variable modifications within groups. / **词组联动功能上线**：支持在同一组内的变量同步更新。
+*   **📱 Mobile Depth Optimization**: Better dark mode adaptation and icon contrast. / **移动端深度优化**：设置页适配及图标美化。
+*   **🐞 Bug Fixes**: Improved export stability and storage reliability. / **Bug 修复与体验提升**：导出稳定性与存储写入优化。
+
+### Version 0.5.1 (2025-12-22)
+*   **📱 Mobile Interaction**: Immersive details, drawer menus, and 3D gyroscope effects. / **移动端交互大革新**：沉浸式详情页、侧滑抽屉及陀螺仪 3D 效果。
+*   **⚡ Performance**: High-performance Mesh Gradient background and 60FPS scrolling. / **性能与稳定性优化**：Mesh Gradient 背景与平滑滚动逻辑。
+*   **🛠️ Data Merging**: Smooth upgrade mechanism for user data migration. / **智能数据合并**：优化了数据迁移逻辑，支持平滑升级。
+
+### Version 0.5.0 (2025-12-20)
+*   **🏗️ Architecture**: Decoupled components and significant performance improvements. / **深度架构重构**：组件化解耦及性能飞跃。
+*   **🎨 New UX**: New Discovery View with masonry layout and floating toolbar. / **全新交互体验**：独立发现页与抽屉式悬浮。
+*   **📸 Enhanced Export**: Wider long images (860px) and improved variable styles. / **导出功能增强**：宽度优化与文字美化。
+*   **🔔 Sync Awareness**: App/Template version checking and cloud sync notifications. / **模版更新感知**：双重版本校验与实时同步。
+
+### Version 0.4.1 (2025-12-12)
+*   **Export Optimization**: JPG format (smaller size), blurry background, and cleaner layout. / **导出功能优化**：JPG 格式、模糊背景及布局重构。
+*   **Mobile Experience**: Toast notifications instead of alerts and detailed backup info. / **移动端体验提升**：Toast 通知及导入进度反馈。
+
+### Version 0.4.0 (2025-12-10)
+*   **Features**: Masonry display, tag filtering, and Base64 pre-fetching for exports. / **功能更新**：瀑布流展示、标签过滤及导出优化。
+*   **New Content**: New high-quality templates and expanded banks. / **新模版/词库**：新增多个高分模版及配套词库。
+
+### Version 0.3.0 (2025-12-08)
+*   **UI & Docs**: Premium button design and structured usage guide. / **UI 优化与文档完善**：统一设计语言及重构指南。
+*   **Image Management**: Custom preview uploads and Lightbox support. / **图像管理功能**：支持自定义预览图上传及全屏预览。
+
+### Version 0.2.0
+*   Long image export, custom category colors, and responsive layout fixes. / 增加导出长图、颜色配置及布局优化。
+
+### Version 0.1.0
+*   Initial release: basic template/bank management and interaction system. / 初始版本发布。
+
+---
+
+## 🤝 Contribution / 贡献
+Issues and Pull Requests are welcome! / 欢迎提交 Issue 或 Pull Request 来改进这个项目！
+
+## 📄 License / 许可证
+MIT License / [MIT 许可证](LICENSE).
+
+---
 **Made with ❤️ by 角落工作室**
