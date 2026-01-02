@@ -19,6 +19,7 @@ export const INITIAL_BANKS = {
       { cn: "资深影视角色原画师", en: "Senior Film Character Concept Artist" },
       { cn: "赛博朋克风格设计师", en: "Cyberpunk Style Designer" },
       { cn: "暗黑幻想风格插画师", en: "Dark Fantasy Style Illustrator" }
+      { cn: "身份测试", en: "ID test" }
     ]
   },
   subject: {
