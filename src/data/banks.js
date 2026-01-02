@@ -20,6 +20,7 @@ export const INITIAL_BANKS = {
       { cn: "赛博朋克风格设计师", en: "Cyberpunk Style Designer" },
       { cn: "暗黑幻想风格插画师", en: "Dark Fantasy Style Illustrator" }
       { cn: "身份测试", en: "ID test" }
+      { cn: "身份测试2", en: "ID test2" }
     ]
   },
   subject: {
