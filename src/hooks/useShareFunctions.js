@@ -285,21 +285,21 @@ export const useShareFunctions = (
 
       templateToImport.content = updateContent(templateToImport.content);
       
-      // 更新 selections 中的键名 (通常格式为 key_index)
+      // 更新 selections 中的键名 (格式为 key-idx 或 key_groupId-idx)
       const newSelections = {};
       Object.entries(templateToImport.selections).forEach(([selKey, val]) => {
-        let newSelKey = selKey;
+        let currentSelKey = selKey;
         sortedOldKeys.forEach(oldKey => {
           if (keyMap[oldKey]) {
             const newKey = keyMap[oldKey];
-            if (selKey.startsWith(`${oldKey}_`)) {
-              newSelKey = selKey.replace(new RegExp(`^${oldKey}_`), `${newKey}_`);
-            } else if (selKey === oldKey) {
-              newSelKey = newKey;
+            // 匹配开头是 oldKey，后面跟着 - (普通变量) 或 _ (联动组)
+            const regex = new RegExp(`^${oldKey}(?=[-_])`);
+            if (regex.test(currentSelKey)) {
+              currentSelKey = currentSelKey.replace(regex, newKey);
             }
           }
         });
-        newSelections[newSelKey] = val;
+        newSelections[currentSelKey] = val;
       });
       templateToImport.selections = newSelections;
     }

@@ -56,13 +56,17 @@ export const compressTemplate = (data, banks = null, categories = null) => {
     if (!data) return null;
 
     // 1. 提取核心数据，过滤掉巨大的 Base64 图像
-    const simplifiedData = (data.n && data.c) ? data : {
+    const simplifiedData = (data.n && data.c) ? {
+      ...data,
+      s: data.s || data.selections || {} // 确保 selections 被包含 (s 为精简键名)
+    } : {
       n: data.name || "",
       c: data.content || "",
       t: data.tags || [],
       a: data.author || 'User',
       l: data.language || ['cn', 'en'],
-      i: (typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : ""
+      i: (typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : "",
+      s: data.selections || {} // s for selections
     };
 
     // 2. 如果提供了 banks，提取模板中使用的自定义词库
@@ -73,7 +77,14 @@ export const compressTemplate = (data, banks = null, categories = null) => {
       
       const varRegex = /{{(.*?)}}/g;
       const matches = [...contentStr.matchAll(varRegex)];
-      const baseKeys = [...new Set(matches.map(m => m[1].trim().split('_')[0]))];
+      
+      // 使用更精确的解析逻辑提取 baseKey，支持带下划线的词库名
+      const baseKeys = [...new Set(matches.map(m => {
+        const fullKey = m[1].trim();
+        // 匹配逻辑：提取末尾如果是 _数字 的部分之前的全部内容
+        const match = fullKey.match(/^(.+?)(?:_(\d+))?$/);
+        return match ? match[1] : fullKey;
+      }))];
       
       const relevantBanks = {};
       const relevantCategories = {};
@@ -154,7 +165,7 @@ export const decompressTemplate = (compressedBase64) => {
       imageUrl: data.i || "",
       banks: data.b || null,
       categories: data.cg || null,
-      selections: {}
+      selections: data.s || data.selections || {}
     };
   } catch (error) {
     console.error('Decompression error:', error);
