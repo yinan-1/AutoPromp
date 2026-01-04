@@ -22,6 +22,20 @@ export const SettingsView = ({
   
   const updateLogs = language === 'cn' ? [
     { 
+      version: 'V0.7.0', 
+      date: '2026年1月3日', 
+      time: '11:30 AM',
+      title: '导出稳定性与统计功能增强',
+      type: 'MAJOR',
+      content: [
+        '新增 Vercel Analytics 集成，实时掌握应用访问动态。',
+        '导出功能重大升级：支持短链接动态二维码，长链接自动降级至官网二维码。',
+        '移动端预览优化：图片预览全面支持暗色模式，视觉交互更沉浸。',
+        '导出稳定性增强：引入图片 Base64 预缓存与 CORS 智能代理。',
+        'UI 细节优化：重构导出按钮布局，美化操作文案与交互体验。'
+      ]
+    },
+    { 
       version: 'V0.6.5', 
       date: '2025年12月31日', 
       time: '10:00 AM',
@@ -147,6 +161,20 @@ export const SettingsView = ({
       ]
     }
   ] : [
+    { 
+      version: 'V0.7.0', 
+      date: 'Jan 3, 2026', 
+      time: '11:30 AM',
+      title: 'Export Stability & Analytics',
+      type: 'MAJOR',
+      content: [
+        'Integrated Vercel Analytics for real-time app usage insights.',
+        'Major Export Upgrade: Support for dynamic short-link QR codes.',
+        'Mobile Preview Upgrade: Full Dark Mode support for immersive experience.',
+        'Export Stability: Added Base64 pre-caching and CORS proxy fallback.',
+        'UI Refinement: Improved desktop action buttons and mobile interaction layout.'
+      ]
+    },
     { 
       version: 'V0.6.5', 
       date: 'Dec 31, 2025', 
@@ -316,7 +344,7 @@ export const SettingsView = ({
           </h1>
           <div className="flex items-center gap-3 mt-1">
             <span className={`text-[9px] font-black tracking-[0.1em] uppercase ${isDarkMode ? 'text-gray-600' : 'text-gray-500'}`}>
-              System V0.6.5
+              System V0.7.0
             </span>
             <div className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
             <span className="text-[9px] font-black text-orange-500/80 tracking-[0.1em] uppercase">

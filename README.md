@@ -11,8 +11,8 @@
 A **structured prompt generation tool** designed specifically for AI painting (GPT, Midjourney, Nano Banana, etc.). Help users quickly build, manage, and iterate complex prompts through a visual "fill-in-the-blank" interaction.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.6.5-orange.svg)
-![Data](https://img.shields.io/badge/Data-0.7.6-green.svg)
+![Version](https://img.shields.io/badge/Version-0.7.0-orange.svg)
+![Data](https://img.shields.io/badge/Data-0.8.0-green.svg)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB.svg)
 ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg)
@@ -22,7 +22,7 @@ A **structured prompt generation tool** designed specifically for AI painting (G
 
 ## 📝 Foreword
 
-Prompt Fill is now at version **v0.6.5**. The original intention of this project is to solve the problem of hard-to-remember, hard-to-manage, and tedious modification of prompts in the AI painting process. By structuring prompts, creation becomes as simple as "filling in the blanks".
+Prompt Fill is now at version **v0.7.0**. The original intention of this project is to solve the problem of hard-to-remember, hard-to-manage, and tedious modification of prompts in the AI painting process. By structuring prompts, creation becomes as simple as "filling in the blanks".
 
 ### 🌟 Progress & Core Features
 
@@ -69,6 +69,7 @@ Prompt Fill is now at version **v0.6.5**. The original intention of this project
 ### 📋 Export & Share
 *   **One-click Copy**: Copy clean generated prompt text.
 *   **Save Long Image**: Export HD JPGs for archiving and sharing.
+*   **Private Short-link Sharing**: Share templates via professional short links (Self-hostable).
 
 ---
 
@@ -86,6 +87,15 @@ Prompt Fill is now at version **v0.6.5**. The original intention of this project
 
 ### Prerequisites
 Node.js v18+ is recommended.
+
+### Private Share Server (Optional)
+This project supports short-link sharing via a private backend.
+1. **Host the API**: Backend code is available for private deployment (Node.js + SQLite).
+2. **Configure Frontend**: Create a `.env` file in the root and add your API URL:
+   ```bash
+   VITE_SHARE_API_URL=https://your-api.com/api/share
+   ```
+3. **Fallback**: If no API is configured, the app automatically falls back to long URL sharing, which works offline and requires no server.
 
 ### Installation & Run
 
@@ -163,6 +173,11 @@ Copy the final prompt or save as a long image. JSON Import/Export is available f
 
 ## 📝 Change Log
 
+### Version 0.7.0 (2026-01-03)
+*   **📊 Analytics**: Integrated Vercel Analytics for real-time traffic monitoring.
+*   **🚀 Export V2**: Support for dynamic short-link QR codes and smart proxy fallback.
+*   **🌙 Immersive UI**: Full Dark Mode support for mobile image preview.
+
 ### Version 0.6.5 (2025-12-31)
 *   **🔗 Link Sharing**: Added support for sharing templates via public URLs.
 *   **📊 Data Milestone**: Data version upgraded to V0.7.6 with a comprehensive update to preset banks and templates.
@@ -197,7 +212,7 @@ Copy the final prompt or save as a long image. JSON Import/Export is available f
 
 ---
 
-## 🤝 Contribution
+## 贡献
 Issues and Pull Requests are welcome!
 
 ## 📄 License
@@ -212,8 +227,8 @@ MIT License / [MIT 许可证](LICENSE).
 一个专为 AI 绘画（GPT、Nano Banana 等）设计的**结构化提示词生成工具**。通过可视化的"填空"交互方式，帮助用户快速构建、管理和迭代复杂的 Prompt。
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/Version-0.6.5-orange.svg)
-![Data](https://img.shields.io/badge/Data-0.7.6-green.svg)
+![Version](https://img.shields.io/badge/Version-0.7.0-orange.svg)
+![Data](https://img.shields.io/badge/Data-0.8.0-green.svg)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB.svg)
 ![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg)
@@ -270,6 +285,7 @@ Prompt Fill 现已迭代至 **v0.6.5** 版本。本项目初衷是解决 AI 绘�
 ### 📋 导出与分享
 *   **一键复制**：复制最终生成的纯净 Prompt 文本。
 *   **保存长图**：将填好的模版导出为高清图片，方便分享。
+*   **私有短链分享**：支持通过私有服务器生成整洁的短链接（可自建）。
 
 ---
 
@@ -287,6 +303,15 @@ Prompt Fill 现已迭代至 **v0.6.5** 版本。本项目初衷是解决 AI 绘�
 
 ### 前置要求
 推荐使用 Node.js v18+。
+
+### 私有分享服务器 (可选)
+本项目支持通过私有后端实现短链接分享。
+1. **部署后端**：后端代码（Node.js + SQLite）可独立部署。
+2. **配置前端**：在根目录创建 `.env` 文件，填入你的 API 地址：
+   ```bash
+   VITE_SHARE_API_URL=https://your-api.com/api/share
+   ```
+3. **自动降级**：如果不配置 API，系统会自动降级为“超长链接分享”，无需服务器即可离线使用。
 
 ### 安装与运行
 
@@ -364,6 +389,11 @@ Prompt Fill 现已迭代至 **v0.6.5** 版本。本项目初衷是解决 AI 绘�
 
 ## 📝 更新日志
 
+### Version 0.7.0 (2026-01-03)
+*   **📊 统计集成**：集成 Vercel Analytics，实时掌握应用访问动态。
+*   **🚀 导出增强**：支持动态短链接二维码生成，引入图片预缓存与智能代理。
+*   **🌙 沉浸体验**：移动端图片预览全面适配暗色模式。
+
 ### Version 0.6.5 (2025-12-31)
 *   **🔗 链接分享**：新增支持通过公开链接分享模版功能。
 *   **📊 数据里程碑**：数据版本升级至 V0.7.6，全面更新预置词库与模版。
@@ -388,8 +418,8 @@ Prompt Fill 现已迭代至 **v0.6.5** 版本。本项目初衷是解决 AI 绘�
 
 ---
 
-## 🤝 贡献
-欢迎提交 Issue 或 Pull Request 来改进这个项目！
+## 贡献
+Issues and Pull Requests are welcome!
 
 ## 📄 许可证
 MIT License / [MIT 许可证](LICENSE).

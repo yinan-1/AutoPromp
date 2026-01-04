@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, GripVertical, Download, Upload, Image as ImageIcon, List, Undo, Redo, Maximize2, RotateCcw, LayoutGrid, Search, ArrowRight, ArrowUpRight, ArrowUpDown, RefreshCw, Sparkles, Sun, Moon, Share2, ExternalLink } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
@@ -14,565 +15,17 @@ import { MASONRY_STYLES } from './constants/masonryStyles';
 // ====== 导入工具函数 ======
 import { deepClone, makeUniqueKey, waitForImageLoad, getLocalized, getSystemLanguage, compressTemplate, decompressTemplate, copyToClipboard } from './utils/helpers';
 import { mergeTemplatesWithSystem, mergeBanksWithSystem } from './utils/merge';
-import { SCENE_WORDS, STYLE_WORDS } from './constants/slogan';
 
 // ====== 导入自定义 Hooks ======
-import { useStickyState } from './hooks/useStickyState';
+import { useStickyState, useEditorHistory, useLinkageGroups, useShareFunctions, useTemplateManagement } from './hooks';
 
 // ====== 导入 UI 组件 ======
 import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplatesSidebar, BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar } from './components';
-import MobileTabBar from './components/MobileTabBar';
+import { ImagePreviewModal, AnimatedSlogan, MobileAnimatedSlogan } from './components/preview';
+import { MobileBottomNav } from './components/mobile';
+import { ShareOptionsModal, ImportTokenModal, ShareImportModal } from './components/modals';
+import { DataUpdateNotice, AppUpdateNotice } from './components/notifications';
 
-// --- 组件：图片 3D 预览弹窗 (优化性能，状态局部化) ---
-const ImagePreviewModal = React.memo(({ 
-  zoomedImage, 
-  template, 
-  language, 
-  setLanguage,
-  t, 
-  TAG_STYLES, 
-  displayTag, 
-  setActiveTemplateId, 
-  setDiscoveryView, 
-  setZoomedImage, 
-  setMobileTab,
-  handleRefreshSystemData,
-  setIsSettingsOpen,
-  isDarkMode
-}) => {
-  const [modalMousePos, setModalMousePos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const [isTextExpanded, setIsTextExpanded] = useState(false);
-  const touchStartY = useRef(0);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-  // 陀螺仪支持
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const handleOrientation = (e) => {
-      // 当卡片展开时，暂停陀螺仪 3D 效果更新，优先保证文字滚动
-      if (isTextExpanded) return;
-
-      const { beta, gamma } = e;
-      if (beta !== null && gamma !== null) {
-        // 映射到类似鼠标坐标的值
-        const x = (window.innerWidth / 2) + (gamma / 20) * (window.innerWidth / 2);
-        const y = (window.innerHeight / 2) + (beta / 20) * (window.innerHeight / 2);
-        setModalMousePos({ x, y });
-      }
-    };
-
-    window.addEventListener('deviceorientation', handleOrientation);
-    return () => window.removeEventListener('deviceorientation', handleOrientation);
-  }, [isMobile, isTextExpanded]);
-
-  // 获取所有图片列表
-  const allImages = useMemo(() => {
-    if (template?.imageUrls && Array.isArray(template.imageUrls) && template.imageUrls.length > 0) {
-      return template.imageUrls;
-    }
-    return template?.imageUrl ? [template.imageUrl] : [zoomedImage];
-  }, [template, zoomedImage]);
-
-  const [currentIndex, setCurrentIndex] = useState(() => {
-    const idx = allImages.indexOf(zoomedImage);
-    return idx >= 0 ? idx : 0;
-  });
-
-  const currentImageUrl = allImages[currentIndex];
-
-  // 锁定/解锁背景滚动
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
-
-  // 计算 3D 旋转角度
-  const rotateY = (modalMousePos.x - window.innerWidth / 2) / (window.innerWidth / 2) * 15;
-  const rotateX = (modalMousePos.y - window.innerHeight / 2) / (window.innerHeight / 2) * -15;
-
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev - 1 + allImages.length) % allImages.length);
-  };
-
-  const handleNext = (e) => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev + 1) % allImages.length);
-  };
-
-  // 移动端手势处理
-  const handleCardTouchStart = (e) => {
-    // 如果触摸开始于内容区域，不记录起始位置
-    if (e.target.closest('.content-scroll-area')) {
-      return;
-    }
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchMove = (e) => {
-    // 当卡片展开时，内容区域的滑动完全用于文字滚动，不更新3D效果
-    if (isTextExpanded && e.target.closest('.content-scroll-area')) {
-      return;
-    }
-    
-    // 实时更新 3D 效果
-    const touch = e.touches[0];
-    setModalMousePos({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleCardTouchEnd = (e) => {
-    // 如果触摸结束于内容区域，不处理展开/收起逻辑
-    if (e.target.closest('.content-scroll-area') || touchStartY.current === 0) {
-      touchStartY.current = 0;
-      return;
-    }
-    
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaY = touchStartY.current - touchEndY;
-
-    // 向上滑动超过 50px 则展开
-    if (deltaY > 50 && !isTextExpanded) {
-      setIsTextExpanded(true);
-    }
-    // 向下滑动超过 50px 则收起
-    else if (deltaY < -50 && isTextExpanded) {
-      setIsTextExpanded(false);
-    }
-    
-    touchStartY.current = 0;
-  };
-
-  if (isMobile) {
-    return (
-      <div 
-          className="fixed inset-0 z-[200] flex flex-col animate-in fade-in duration-500 overflow-hidden"
-          onClick={() => setZoomedImage(null)}
-      >
-          {/* Background Layer - Light Version */}
-          <div 
-            className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: 'url(/background1.png)' }}
-          >
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl"></div>
-          </div>
-
-          <button 
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors p-2 rounded-full hover:bg-black/5 z-[150]"
-              onClick={() => setZoomedImage(null)}
-          >
-              <X size={24} />
-          </button>
-
-          <div 
-            className="flex-1 flex flex-col relative overflow-hidden" 
-            onClick={(e) => e.stopPropagation()}
-          >
-              {/* Image Section */}
-              <div 
-                className={`transition-all duration-500 ease-in-out flex flex-col justify-center items-center perspective-[1000px] relative px-6 flex-shrink-0 ${isTextExpanded ? 'h-[30vh] pt-10' : 'h-[60vh]'}`}
-                style={{ perspective: '1200px' }}
-                onTouchMove={handleTouchMove}
-              >
-                  <div 
-                    className="relative transition-transform duration-200 ease-out flex items-center justify-center w-full h-full"
-                    style={{ 
-                      transform: isTextExpanded ? 'none' : `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-                      transformStyle: 'preserve-3d'
-                    }}
-                  >
-                    {/* Image Shadow */}
-                    <div 
-                      className="absolute inset-6 bg-orange-500/10 blur-3xl rounded-3xl -z-10 transition-opacity duration-500"
-                      style={{ transform: 'translateZ(-50px)' }}
-                    />
-                    <img 
-                        key={currentImageUrl}
-                        src={currentImageUrl} 
-                        alt="Zoomed Preview" 
-                        className="max-w-full max-h-full object-contain rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/50 animate-in fade-in duration-300"
-                        style={{ transform: isTextExpanded ? 'none' : 'translateZ(20px)' }}
-                    />
-                  </div>
-
-                  {/* Mobile Navigation */}
-                  {allImages.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
-                      <button onClick={handlePrev} className="p-1.5 rounded-full bg-white/50 text-gray-400 border border-white shadow-sm"><ChevronLeft size={14} /></button>
-                      <div className="flex gap-1.5">
-                        {allImages.map((_, idx) => (
-                          <div key={idx} className={`w-1 h-1 rounded-full transition-all ${idx === currentIndex ? 'bg-orange-500 w-3' : 'bg-gray-300'}`} />
-                        ))}
-                      </div>
-                      <button onClick={handleNext} className="p-1.5 rounded-full bg-white/50 text-gray-400 border border-white shadow-sm"><ChevronRight size={14} /></button>
-                    </div>
-                  )}
-              </div>
-
-              {/* Bottom Card Section - Light Glassmorphism */}
-              <div 
-                className={`
-                  flex-1 bg-white/70 backdrop-blur-2xl border-t border-white/60 
-                  transition-all duration-500 ease-in-out flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.05)]
-                  ${isTextExpanded ? 'rounded-t-[2.5rem] mt-0' : 'rounded-t-[2rem] mt-4'}
-                `}
-                onTouchStart={handleCardTouchStart}
-                onTouchEnd={handleCardTouchEnd}
-                onClick={(e) => {
-                  if (e.target.closest('.header-trigger') || e.target.closest('.handle-trigger')) {
-                    setIsTextExpanded(!isTextExpanded);
-                  }
-                }}
-              >
-                  {/* Pull Handle */}
-                  <div className="w-full flex justify-center py-3 handle-trigger flex-shrink-0">
-                    <div className="w-10 h-1 rounded-full bg-gray-200"></div>
-                  </div>
-
-                  {/* Header Row */}
-                  <div className="px-6 flex items-center justify-between gap-4 mb-2 header-trigger flex-shrink-0">
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-xl font-bold text-gray-900 truncate mb-0.5">
-                          {getLocalized(template?.name, language)}
-                        </h2>
-                        {template?.author && (
-                          <div className="mb-1.5 opacity-60">
-                            <span className="text-[10px] font-medium text-gray-600 truncate">{template.author}</span>
-                          </div>
-                        )}
-                        <div className="flex flex-wrap gap-1.5">
-                          {(template?.tags || []).slice(0, 2).map(tag => (
-                            <span key={tag} className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${TAG_STYLES[tag] || TAG_STYLES["default"]}`}>
-                              {displayTag(tag)}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (template) {
-                            setActiveTemplateId(template.id);
-                            setDiscoveryView(false);
-                            if (setMobileTab) setMobileTab('editor'); 
-                            setZoomedImage(null);
-                          }
-                        }}
-                        className="px-5 py-2.5 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-xl font-bold text-sm shadow-[0_4px_15px_rgba(249,115,22,0.3)] active:scale-95 transition-all flex items-center gap-2 flex-shrink-0 border border-orange-400/20"
-                      >
-                        <Sparkles size={16} />
-                        {t('use_template')}
-                      </button>
-                  </div>
-
-                  {/* Content Area */}
-                  <div 
-                    className={`px-6 flex-1 overflow-hidden flex flex-col transition-all duration-500 content-scroll-area ${isTextExpanded ? 'opacity-100 mt-4' : 'opacity-0 h-0 pointer-events-none'}`}
-                  >
-                      <div className="flex items-center gap-3 mb-3 flex-shrink-0">
-                        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Prompt Content</h3>
-                        <div className="h-px flex-1 bg-gray-100"></div>
-                      </div>
-                      <div 
-                        className="flex-1 overflow-y-auto custom-scrollbar text-gray-600 text-sm leading-relaxed whitespace-pre-wrap pb-32 overscroll-contain touch-pan-y"
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchMove={(e) => e.stopPropagation()}
-                      >
-                        {getLocalized(template?.content, language)}
-                      </div>
-                  </div>
-                  
-                  {/* Hint for non-expanded state */}
-                  {!isTextExpanded && (
-                    <div className="px-6 pb-24 text-[10px] font-medium text-gray-400 animate-pulse text-center flex-shrink-0">
-                      点击卡片或向上滑动查看详细内容
-                    </div>
-                  )}
-              </div>
-          </div>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-500 overflow-hidden"
-        onMouseMove={(e) => !isMobile && setModalMousePos({ x: e.clientX, y: e.clientY })}
-        onClick={() => setZoomedImage(null)}
-    >
-        {/* Background Layer - Static image + deep mask to prevent flickering from discovery view */}
-        <div 
-          className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
-          style={{ 
-            backgroundImage: 'url(/background1.png)',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/85 backdrop-blur-3xl"></div>
-        </div>
-
-        <button 
-            className="absolute top-6 right-6 md:top-8 md:right-8 text-white/40 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-[120]"
-            onClick={() => setZoomedImage(null)}
-        >
-            <X size={isMobile ? 24 : 32} />
-        </button>
-        
-        <div 
-            className="max-w-7xl w-full h-full md:h-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-20 z-[110]"
-            onClick={(e) => e.stopPropagation()}
-        >
-            {/* Left: Image Section with 3D Effect */}
-            <div 
-              className={`flex-shrink-0 flex justify-center items-center perspective-[1000px] relative group/modal-img flex-1`}
-              style={{ perspective: '1200px' }}
-            >
-                <div 
-                  className="relative transition-transform duration-200 ease-out h-full flex items-center justify-center"
-                  style={{ 
-                    transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-                    transformStyle: 'preserve-3d'
-                  }}
-                >
-                  <div 
-                    className="absolute inset-4 bg-black/40 blur-3xl rounded-3xl -z-10 transition-opacity duration-500"
-                    style={{ transform: 'translateZ(-50px)' }}
-                  />
-                  
-                  <img 
-                      key={currentImageUrl}
-                      src={currentImageUrl} 
-                      alt="Zoomed Preview" 
-                      className={`max-w-full rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/20 animate-in fade-in duration-300 max-h-[75vh] object-contain`}
-                      style={{ transform: 'translateZ(20px)' }}
-                  />
-                </div>
-
-                {/* Navigation & Indicator */}
-                {allImages.length > 1 && (
-                  <div className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-6 z-30 -bottom-12`}>
-                    <button 
-                      onClick={handlePrev}
-                      className="p-1.5 rounded-full bg-white/5 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md border border-white/10"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-
-                    {/* Dots Indicator */}
-                    <div className="flex gap-2">
-                      {allImages.map((_, idx) => (
-                        <div 
-                          key={idx}
-                          className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-orange-500 w-3' : 'bg-white/20'}`}
-                        />
-                      ))}
-                    </div>
-
-                    <button 
-                      onClick={handleNext}
-                      className="p-1.5 rounded-full bg-white/5 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md border border-white/10"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                )}
-            </div>
-            
-            {/* Right: Info & Prompt Section */}
-            <div className={`flex flex-col items-start animate-in slide-in-from-right-10 duration-700 delay-150 overflow-hidden w-full md:w-[450px] mt-auto`}>
-                {template ? (
-                    <>
-                        <div className={`mb-4 md:mb-8`}>
-                            <h2 className={`font-bold text-white mb-2 md:mb-3 tracking-tight leading-tight text-4xl md:text-5xl`}>
-                                {getLocalized(template.name, language)}
-                            </h2>
-                            {template.author && (
-                              <div className="mb-4 opacity-70">
-                                <span className="text-sm font-bold text-white/90 tracking-wide">{template.author}</span>
-                              </div>
-                            )}
-                            <div className="flex flex-wrap gap-2 opacity-80">
-                                {(template.tags || []).map(tag => (
-                                    <span key={tag} className={`px-2 py-0.5 md:px-3 md:py-1 rounded-lg text-[10px] md:text-[11px] font-bold tracking-wider uppercase ${TAG_STYLES[tag] || TAG_STYLES["default"]}`}>
-                                        {displayTag(tag)}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className={`w-full mb-6 md:mb-10 flex-1 overflow-hidden flex flex-col`}>
-                            <div className="flex items-center gap-4 mb-3">
-                                <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Content</h3>
-                                <div className="h-px flex-1 bg-white/5"></div>
-                            </div>
-                            <div className={`text-white/80 leading-relaxed whitespace-pre-wrap font-medium overflow-y-auto custom-scrollbar-white pr-4 text-base md:text-lg max-h-[40vh]`}>
-                                {getLocalized(template.content, language)}
-                            </div>
-                        </div>
-
-                        <div className={`w-full flex flex-col gap-4 mt-auto`}>
-                            <PremiumButton
-                                onClick={() => {
-                                    setActiveTemplateId(template.id);
-                                    setDiscoveryView(false);
-                                    setZoomedImage(null);
-                                }}
-                                icon={Sparkles}
-                                active={true}
-                                isDarkMode={true}
-                                className="w-full !min-h-[56px] !rounded-2xl"
-                            >
-                                <span className="text-lg">{t('use_template') || '使用此模板'}</span>
-                            </PremiumButton>
-                            
-                            <div className="flex items-center justify-between px-2">
-                              <p className="text-[10px] text-white/30 font-bold tracking-widest uppercase">
-                                  Prompt Fill Original
-                              </p>
-                              <div className="flex gap-4">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
-                              </div>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-white/20 gap-4 w-full">
-                        <ImageIcon size={64} strokeWidth={1} />
-                        <p className="text-lg font-bold tracking-widest uppercase">No Data Found</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    </div>
-  );
-});
-
-// --- 组件：动态 Slogan (PC端) ---
-const AnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => {
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [styleIndex, setStyleIndex] = useState(0);
-
-  const currentScenes = SCENE_WORDS[language] || SCENE_WORDS.cn;
-  const currentStyles = STYLE_WORDS[language] || STYLE_WORDS.cn;
-
-  useEffect(() => {
-    if (!isActive) return;
-    
-    const sceneTimer = setInterval(() => {
-      setSceneIndex(prev => (prev + 1) % currentScenes.length);
-    }, 2000);
-    const styleTimer = setInterval(() => {
-      setStyleIndex(prev => (prev + 1) % currentStyles.length);
-    }, 2500);
-    return () => {
-      clearInterval(sceneTimer);
-      clearInterval(styleTimer);
-    };
-  }, [isActive, currentScenes.length, currentStyles.length]);
-
-  return (
-    <div className={`flex flex-wrap items-center justify-center lg:justify-start gap-x-2 gap-y-3 text-sm md:text-base lg:text-lg font-medium font-['MiSans',system-ui,sans-serif] px-2 leading-relaxed min-h-[50px] ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-      <span className="whitespace-nowrap">"{language === 'en' ? 'Show a detailed, miniature' : '展示一个精致的、微缩'}</span>
-      <div className="inline-flex items-center justify-center min-w-[100px]">
-        <span 
-          key={`style-${styleIndex}-${language}`}
-          className="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full transition-all duration-500 select-none font-bold text-white whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2)'
-              : 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(96, 165, 250, 0.4)',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.3)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-          }}
-        >
-          {currentStyles[styleIndex]}
-                </span>
-        </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'of' : '的'}</span>
-      <div className="inline-flex items-center justify-center min-w-[100px]">
-        <span 
-          key={`scene-${sceneIndex}-${language}`}
-          className="inline-block px-3 py-1 md:px-4 md:py-1.5 rounded-full transition-all duration-500 select-none font-bold text-white whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(251, 146, 60, 0.2)'
-              : 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(251, 146, 60, 0.4)',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.3)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-          }}
-        >
-          {currentScenes[sceneIndex]}
-        </span>
-            </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'scene"' : '场景"'}</span>
-    </div>
-  );
-});
-
-// --- 组件：动态 Slogan (移动端) ---
-const MobileAnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => {
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [styleIndex, setStyleIndex] = useState(0);
-
-  const currentScenes = SCENE_WORDS[language] || SCENE_WORDS.cn;
-  const currentStyles = STYLE_WORDS[language] || STYLE_WORDS.cn;
-
-  useEffect(() => {
-    if (!isActive) return;
-
-    const sceneTimer = setInterval(() => {
-      setSceneIndex(prev => (prev + 1) % currentScenes.length);
-    }, 2000);
-    const styleTimer = setInterval(() => {
-      setStyleIndex(prev => (prev + 1) % currentStyles.length);
-    }, 2500);
-    return () => {
-      clearInterval(sceneTimer);
-      clearInterval(styleTimer);
-    };
-  }, [isActive, currentScenes.length, currentStyles.length]);
-
-    return (
-    <div className={`flex flex-wrap items-center justify-center gap-1 text-[11px] md:text-xs font-medium mb-3 min-h-[28px] ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-      <span className="whitespace-nowrap">"{language === 'en' ? 'Show' : '展示'}</span>
-      <div className="inline-flex items-center justify-center min-w-[70px]">
-        <span 
-          key={`style-m-${styleIndex}-${language}`}
-          className="inline-block px-2 py-0.5 rounded-full font-bold text-white text-[10px] whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2)'
-              : '0 2px 8px rgba(96, 165, 250, 0.3)'
-          }}
-        >
-          {currentStyles[styleIndex]}
-        </span>
-                    </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'of' : '的'}</span>
-      <div className="inline-flex items-center justify-center min-w-[70px]">
-        <span 
-          key={`scene-m-${sceneIndex}-${language}`}
-          className="inline-block px-2 py-0.5 rounded-full font-bold text-white text-[10px] whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(251, 146, 60, 0.2)'
-              : '0 2px 8px rgba(251, 146, 60, 0.3)'
-          }}
-        >
-          {currentScenes[sceneIndex]}
-        </span>
-                            </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'scene"' : '场景"'}</span>
-        </div>
-    );
-});
 
 // ====== 以下组件保留在此文件中 ======
 // CategorySection, BankGroup, CategoryManager, InsertVariableModal, App
@@ -584,7 +37,7 @@ const MobileAnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => 
 
 const App = () => {
   // 当前应用代码版本 (必须与 package.json 和 version.json 一致)
-  const APP_VERSION = "0.6.3";
+  const APP_VERSION = "0.7.0";
 
   // 临时功能：瀑布流样式管理
   const [masonryStyleKey, setMasonryStyleKey] = useState('poster');
@@ -601,6 +54,9 @@ const App = () => {
   
   const [templates, setTemplates] = useStickyState(INITIAL_TEMPLATES_CONFIG, "app_templates_v10");
   const [activeTemplateId, setActiveTemplateId] = useStickyState("tpl_default", "app_active_template_id_v4");
+  
+  // Derived State: Current Active Template (必须在其它 hooks 和 effects 之前计算，避免 TDZ 错误)
+  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
   
   const [lastAppliedDataVersion, setLastAppliedDataVersion] = useStickyState("", "app_data_version_v1");
   const [themeMode, setThemeMode] = useStickyState("system", "app_theme_mode_v1");
@@ -640,6 +96,9 @@ const App = () => {
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false); // New UI state
   const [isInsertModalOpen, setIsInsertModalOpen] = useState(false); // New UI state for Insert Picker
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false); // New UI state for Lightbox
+  
+  // 新增：图片 Base64 缓存，用于解决导出时的跨域和稳定性问题
+  const imageBase64Cache = useRef({});
 
   // Add Bank State
   const [isAddingBank, setIsAddingBank] = useState(false);
@@ -669,6 +128,7 @@ const App = () => {
   
   // Template Tag Management State
   const [selectedTags, setSelectedTags] = useState("");
+  const [selectedLibrary, setSelectedLibrary] = useState("all"); // all, official, personal
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTemplateTags, setEditingTemplateTags] = useState(null); // {id, tags}
   const [isDiscoveryView, setDiscoveryView] = useState(true); // 首次加载默认显示发现（海报）视图
@@ -685,6 +145,11 @@ const App = () => {
   }, [isMobileDevice, mobileTab]);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPosterAutoScrollPaused, setIsPosterAutoScrollPaused] = useState(false);
+  const posterScrollRef = useRef(null);
+  const popoverRef = useRef(null);
+  const textareaRef = useRef(null);
+  const sidebarRef = useRef(null);
   
   // 移动端：首页是否展示完全由 mobileTab 控制，避免 isDiscoveryView 残留导致其它 Tab 白屏
   // 桌面端：保持现有 isDiscoveryView 行为（不影响已正常的桌面端）
@@ -777,24 +242,6 @@ const App = () => {
       setEditingTemplateNameId(activeTemplate.id);
     }
   }, [activeTemplateId, isEditing, language]);
-
-  // History State for Undo/Redo
-  const [historyPast, setHistoryPast] = useState([]);
-  const [historyFuture, setHistoryFuture] = useState([]);
-  const historyLastSaveTime = useRef(0);
-
-  // Cursor State for Grouping
-  const [cursorInVariable, setCursorInVariable] = useState(false);
-  const [currentVariableName, setCurrentVariableName] = useState(null);
-  const [currentGroupId, setCurrentGroupId] = useState(null);
-
-  const popoverRef = useRef(null);
-  const textareaRef = useRef(null);
-  const sidebarRef = useRef(null);
-  const posterScrollRef = useRef(null);
-  
-  // Poster Mode Auto Scroll State
-  const [isPosterAutoScrollPaused, setIsPosterAutoScrollPaused] = useState(false);
 
   // Helper: Translate
   const t = (key, params = {}) => {
@@ -944,169 +391,389 @@ const App = () => {
     }
   }, []);
 
-  // Derived State: Current Active Template
-  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
 
-  // 分享功能相关状态
-  const [sharedTemplateData, setSharedTemplateData] = useState(null);
-  const [showShareImportModal, setShowShareImportModal] = useState(false);
-  const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
-  const [showImportTokenModal, setShowImportTokenModal] = useState(false);
-  const [importTokenValue, setImportTokenValue] = useState("");
-
-  // 计算分享 URL（带长度检查）
-  const shareUrlMemo = useMemo(() => {
-    if (!activeTemplate) return "";
-    
-    const compressed = compressTemplate(activeTemplate);
-    const base = PUBLIC_SHARE_URL || (window.location.origin + window.location.pathname);
-    
-    if (!compressed) return base;
-
-    const fullUrl = `${base}${base.endsWith('/') ? '' : '/'}#/share?share=${compressed}`;
-    return fullUrl;
-  }, [activeTemplate]);
-
-  // 检查分享参数
-  useEffect(() => {
-    const handleCheckShare = () => {
-      // 兼容查询参数和哈希参数
-      const hashStr = window.location.hash.split('?')[1] || "";
-      const urlParams = new URLSearchParams(window.location.search || hashStr);
-      let shareData = urlParams.get('share');
-      
-      // 如果没有直接获取到 share 参数，尝试从整个 hash 字符串中解析（防止某些粘贴格式错误）
-      if (!shareData && window.location.hash.includes('share=')) {
-        const match = window.location.hash.match(/share=([^&?]+)/);
-        if (match) shareData = match[1];
+  // ====== Bank 相关函数（需要在 Hook 之前定义）======
+  const handleAddOption = React.useCallback((key, newOption) => {
+    if (!newOption.trim()) return;
+    setBanks(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        options: [...prev[key].options, newOption]
       }
+    }));
+  }, [setBanks]);
 
-      if (shareData) {
-        // 如果输入的是完整的 URL，提取 share 参数部分
-        if (shareData.includes('share=')) {
-          try {
-            const innerUrl = new URL(shareData.startsWith('http') ? shareData : 'http://x.com/' + shareData);
-            const innerParams = new URLSearchParams(innerUrl.search || innerUrl.hash.split('?')[1]);
-            shareData = innerParams.get('share') || shareData;
-          } catch (e) {
-            // 如果解析失败，保持原样
+  // 新增：静默预缓存当前模板图片，提升导出体验
+  useEffect(() => {
+    if (!activeTemplate || !activeTemplate.imageUrl || !activeTemplate.imageUrl.startsWith('http')) return;
+    
+    const url = activeTemplate.imageUrl;
+    if (imageBase64Cache.current[url]) return;
+
+    const preCache = async () => {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const blob = await response.blob();
+                const base64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+                imageBase64Cache.current[url] = base64;
+            }
+        } catch (e) {
+            // 静默失败，导出时会尝试代理
+        }
+    };
+    
+    // 稍微延迟，避免抢占初始渲染资源
+    const timer = setTimeout(preCache, 2000);
+    return () => clearTimeout(timer);
+  }, [activeTemplate?.imageUrl]);
+
+  // 动态更新 SEO 标题和描述
+  useEffect(() => {
+    if (activeTemplate && typeof window !== 'undefined') {
+      try {
+        const templateName = getLocalized(activeTemplate.name, language);
+        if (templateName) {
+          const siteTitle = "Prompt Fill | 提示词填空器";
+          document.title = `${templateName} - ${siteTitle}`;
+          
+          // 动态更新 meta description
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            const content = typeof activeTemplate.content === 'object' 
+              ? (activeTemplate.content[language] || activeTemplate.content.cn || activeTemplate.content.en || "")
+              : (activeTemplate.content || "");
+            
+            if (content) {
+              const descriptionText = content.slice(0, 150).replace(/[#*`]/g, '').replace(/\s+/g, ' ');
+              metaDescription.setAttribute("content", `${templateName}: ${descriptionText}...`);
+            }
           }
         }
-
-        const decoded = decompressTemplate(shareData);
-        if (decoded && decoded.name && decoded.content) {
-          setSharedTemplateData(decoded);
-          setShowShareImportModal(true);
-          
-          // 清理 URL，避免刷新时重复触发
-          const newUrl = window.location.origin + window.location.pathname + window.location.hash.split('?')[0];
-          window.history.replaceState({}, document.title, newUrl);
-        }
-      }
-    };
-
-    handleCheckShare();
-    window.addEventListener('hashchange', handleCheckShare);
-    return () => window.removeEventListener('hashchange', handleCheckShare);
-  }, []);
-
-  // 手动口令导入处理函数
-  const handleManualTokenImport = (token) => {
-    if (!token) return;
-    
-    let shareData = token.trim();
-    
-    // 识别是否是特殊的口令格式 #pf$token$
-    if (shareData.includes('#pf$') && shareData.includes('$')) {
-      const match = shareData.match(/#pf\$([^$]+)\$/);
-      if (match) shareData = match[1];
-    }
-    
-    // 识别是否是完整的 URL 链接
-    if (shareData.includes('http://') || shareData.includes('https://') || shareData.includes('share=')) {
-      try {
-        // 尝试解析 URL
-        const urlObj = new URL(shareData.startsWith('http') ? shareData : 'http://temp.com/' + shareData);
-        const params = new URLSearchParams(urlObj.search || urlObj.hash.split('?')[1]);
-        const extracted = params.get('share');
-        if (extracted) shareData = extracted;
       } catch (e) {
-        // 解析失败则按原样尝试
+        console.error("SEO update error:", e);
       }
     }
+  }, [activeTemplate, language]);
 
-    const decoded = decompressTemplate(shareData);
-    if (decoded && decoded.name && decoded.content) {
-      setSharedTemplateData(decoded);
-      setShowShareImportModal(true);
-    } else {
-      alert(language === 'cn' ? '无效的分享口令或链接' : 'Invalid share token or link');
+  const handleDeleteOption = React.useCallback((key, optionToDelete) => {
+    setBanks(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        options: prev[key].options.filter(opt => opt !== optionToDelete)
+      }
+    }));
+  }, [setBanks]);
+
+  // ====== 使用自定义 Hooks ======
+
+  // 1. 编辑器历史记录 Hook
+  const {
+    historyPast,
+    historyFuture,
+    updateActiveTemplateContent,
+    handleUndo,
+    handleRedo,
+    resetHistory,
+    canUndo,
+    canRedo,
+  } = useEditorHistory(activeTemplateId, activeTemplate, setTemplates);
+
+  // 2. 联动组管理 Hook
+  const linkageGroups = useLinkageGroups(
+    activeTemplateId,
+    templates,
+    setTemplates,
+    banks,
+    handleAddOption
+  );
+
+  const {
+    parseVariableName,
+    cursorInVariable,
+    setCursorInVariable,
+    currentVariableName,
+    setCurrentVariableName,
+    currentGroupId,
+    setCurrentGroupId,
+    findLinkedVariables,
+    updateActiveTemplateSelection,
+    handleSelect: handleSelectFromHook,
+    handleAddCustomAndSelect: handleAddCustomAndSelectFromHook,
+  } = linkageGroups;
+
+  // 3. 分享功能 Hook
+  const {
+    sharedTemplateData,
+    showShareImportModal,
+    showShareOptionsModal,
+    showImportTokenModal,
+    importTokenValue,
+    shareUrlMemo,
+    isGenerating,
+    setSharedTemplateData,
+    setShowShareImportModal,
+    setShowShareOptionsModal,
+    setShowImportTokenModal,
+    setImportTokenValue,
+    handleManualTokenImport,
+    handleImportSharedTemplate,
+    handleShareLink,
+    doCopyShareLink,
+    handleShareToken,
+    getShortCodeFromServer,
+  } = useShareFunctions(
+    activeTemplate,
+    setTemplates,
+    setActiveTemplateId,
+    setDiscoveryView,
+    isMobileDevice,
+    setMobileTab,
+    language,
+    t,
+    banks,
+    setBanks,
+    categories,
+    setCategories
+  );
+
+  // Template Management
+  const templateManagement = useTemplateManagement(
+    templates,
+    setTemplates,
+    activeTemplateId,
+    activeTemplate,
+    setActiveTemplateId,
+    setIsEditing,
+    setEditingTemplateNameId,
+    setTempTemplateName,
+    setTempTemplateAuthor,
+    language,
+    isMobileDevice,
+    setMobileTab,
+    INITIAL_TEMPLATES_CONFIG,
+    t
+  );
+  const {
+    handleAddTemplate,
+    handleDuplicateTemplate,
+    handleDeleteTemplate,
+    handleResetTemplate,
+    startRenamingTemplate,
+    handleStartEditing,
+    handleStopEditing
+  } = templateManagement;
+
+  // 包装 saveTemplateName，传入状态值
+  const saveTemplateName = () => {
+    if (editingTemplateNameId && tempTemplateName && tempTemplateName.trim()) {
+      templateManagement.saveTemplateName(editingTemplateNameId, tempTemplateName, tempTemplateAuthor);
     }
   };
 
-  const handleImportSharedTemplate = () => {
-    if (!sharedTemplateData) return;
-    
-    const newTpl = {
-      ...sharedTemplateData,
-      id: `tpl_shared_${Date.now()}`,
-      selections: sharedTemplateData.selections || {},
-      author: sharedTemplateData.author || t('official')
-    };
+  // 包装 handleSelect，使其兼容原有调用方式
+  const handleSelect = React.useCallback((key, index, value) => {
+    handleSelectFromHook(key, index, value, setActivePopover);
+  }, [handleSelectFromHook]);
 
-    setTemplates(prev => [...prev, newTpl]);
-    setActiveTemplateId(newTpl.id);
-    setShowShareImportModal(false);
-    setSharedTemplateData(null);
-    setDiscoveryView(false);
-    
-    if (isMobileDevice) {
-      setMobileTab('editor');
-    }
-  };
+  // 包装 handleAddCustomAndSelect，使其兼容原有调用方式
+  const handleAddCustomAndSelect = React.useCallback((key, index, newValue) => {
+    handleAddCustomAndSelectFromHook(key, index, newValue, setActivePopover);
+  }, [handleAddCustomAndSelectFromHook]);
 
-    const handleShareLink = () => {
-      setShowShareOptionsModal(true);
-    };
-
-    // 实际执行复制分享链接
-    const doCopyShareLink = async () => {
-      if (shareUrlMemo) {
-        const success = await copyToClipboard(shareUrlMemo);
-        if (success) {
-          alert(t('share_success'));
-          setShowShareOptionsModal(false);
-        } else {
-          alert(language === 'cn' ? '复制失败，请手动长按复制' : 'Copy failed, please copy manually');
-        }
-      }
-    };
-
-    // 复制分享口令 (WeChat 友好)
-    const handleShareToken = async () => {
-      if (!activeTemplate) return;
-      const compressed = compressTemplate(activeTemplate);
-      if (!compressed) return;
-
-      const templateName = getLocalized(activeTemplate.name, language);
-      const tokenText = `「Prompt分享」我的新模版：${templateName}\n复制整段文字，打开【提示词填空器】即可导入：\n#pf$${compressed}$`;
-      
-      const success = await copyToClipboard(tokenText);
-      if (success) {
-        alert(language === 'cn' ? '分享口令已复制，快去发给好友吧！' : 'Share token copied!');
-        setShowShareOptionsModal(false);
-      } else {
-        alert(language === 'cn' ? '复制失败，请尝试链接分享' : 'Copy failed, please try Link Share');
-      }
-    };
+  // 分享相关函数已移至 useShareFunctions Hook
 
   // --- Effects ---
+
   // Reset history when template changes
   useEffect(() => {
-      setHistoryPast([]);
-      setHistoryFuture([]);
-      historyLastSaveTime.current = 0;
-  }, [activeTemplateId]);
+    resetHistory();
+  }, [activeTemplateId, resetHistory]);
+
+  // 检测光标是否在变量内，并提取当前变量信息
+  const detectCursorInVariable = React.useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea || !isEditing) {
+      setCursorInVariable(false);
+      setCurrentVariableName(null);
+      setCurrentGroupId(null);
+      return;
+    }
+
+    const text = textarea.value;
+    const cursorPos = textarea.selectionStart;
+
+    // 向前查找最近的 {{
+    let startPos = cursorPos;
+    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
+      startPos--;
+    }
+
+    // 向后查找最近的 }}
+    let endPos = cursorPos;
+    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
+      endPos++;
+    }
+
+    // 检查光标是否在 {{...}} 之间
+    if (startPos >= 0 && endPos < text.length &&
+        text.substring(startPos - 2, startPos) === '{{' &&
+        text.substring(endPos, endPos + 2) === '}}') {
+      // 光标在变量内
+      const variableName = text.substring(startPos, endPos).trim();
+      const parsed = parseVariableName(variableName);
+
+      setCursorInVariable(true);
+      setCurrentVariableName(variableName);
+      setCurrentGroupId(parsed.groupId);
+    } else {
+      setCursorInVariable(false);
+      setCurrentVariableName(null);
+      setCurrentGroupId(null);
+    }
+  }, [isEditing, parseVariableName, setCursorInVariable, setCurrentVariableName, setCurrentGroupId]);
+
+  // 监听光标位置变化
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea || !isEditing) return;
+
+    const handleSelectionChange = () => {
+      detectCursorInVariable();
+    };
+
+    textarea.addEventListener('keyup', handleSelectionChange);
+    textarea.addEventListener('click', handleSelectionChange);
+    textarea.addEventListener('select', handleSelectionChange);
+
+    return () => {
+      textarea.removeEventListener('keyup', handleSelectionChange);
+      textarea.removeEventListener('click', handleSelectionChange);
+      textarea.removeEventListener('select', handleSelectionChange);
+    };
+  }, [isEditing, detectCursorInVariable]);
+
+  // 设置分组：为当前变量添加或修改分组后缀
+  const handleSetGroup = React.useCallback((groupNum) => {
+    if (!cursorInVariable || !currentVariableName) return;
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const text = textarea.value;
+    const cursorPos = textarea.selectionStart;
+
+    // 向前查找最近的 {{
+    let startPos = cursorPos;
+    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
+      startPos--;
+    }
+
+    // 向后查找最近的 }}
+    let endPos = cursorPos;
+    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
+      endPos++;
+    }
+
+    if (startPos >= 0 && endPos < text.length) {
+      const variableName = text.substring(startPos, endPos).trim();
+      const parsed = parseVariableName(variableName);
+      const baseKey = parsed.baseKey;
+
+      // 构建新的变量名：baseKey_groupNum
+      const newVariableName = `${baseKey}_${groupNum}`;
+
+      // 替换文本：只替换 {{ 和 }} 之间的内容
+      const before = text.substring(0, startPos);
+      const after = text.substring(endPos);
+      const newText = `${before}${newVariableName}${after}`;
+
+      // 更新内容
+      const currentContent = activeTemplate.content;
+      const isMultilingual = typeof currentContent === 'object';
+      if (isMultilingual) {
+        updateActiveTemplateContent({
+          ...currentContent,
+          [templateLanguage]: newText
+        }, true);
+      } else {
+        updateActiveTemplateContent(newText, true);
+      }
+
+      // 恢复光标位置（调整偏移）
+      setTimeout(() => {
+        const offset = newVariableName.length - variableName.length;
+        const newCursorPos = cursorPos + offset;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+        detectCursorInVariable();
+      }, 0);
+    }
+  }, [cursorInVariable, currentVariableName, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
+
+  // 移除分组：移除当前变量的分组后缀
+  const handleRemoveGroup = React.useCallback(() => {
+    if (!cursorInVariable || !currentVariableName || !currentGroupId) return;
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const text = textarea.value;
+    const cursorPos = textarea.selectionStart;
+
+    // 向前查找最近的 {{
+    let startPos = cursorPos;
+    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
+      startPos--;
+    }
+
+    // 向后查找最近的 }}
+    let endPos = cursorPos;
+    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
+      endPos++;
+    }
+
+    if (startPos >= 0 && endPos < text.length) {
+      const variableName = text.substring(startPos, endPos).trim();
+      const parsed = parseVariableName(variableName);
+      const baseKey = parsed.baseKey;
+
+      // 新的变量名：只保留 baseKey，移除后缀
+      const newVariableName = baseKey;
+
+      // 替换文本：只替换 {{ 和 }} 之间的内容
+      const before = text.substring(0, startPos);
+      const after = text.substring(endPos);
+      const newText = `${before}${newVariableName}${after}`;
+
+      // 更新内容
+      const currentContent = activeTemplate.content;
+      const isMultilingual = typeof currentContent === 'object';
+      if (isMultilingual) {
+        updateActiveTemplateContent({
+          ...currentContent,
+          [templateLanguage]: newText
+        }, true);
+      } else {
+        updateActiveTemplateContent(newText, true);
+      }
+
+      // 恢复光标位置（调整偏移）
+      setTimeout(() => {
+        const offset = newVariableName.length - variableName.length;
+        const newCursorPos = cursorPos + offset;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+        detectCursorInVariable();
+      }, 0);
+    }
+  }, [cursorInVariable, currentVariableName, currentGroupId, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1196,125 +863,6 @@ const App = () => {
   };
 
   // --- Template Actions ---
-
-  const handleAddTemplate = () => {
-    const newId = `tpl_${Date.now()}`;
-    const newName = t('new_template_name');
-    const newAuthor = "PromptFill User";
-    const newTemplate = {
-      id: newId,
-      name: newName,
-      author: newAuthor,
-      content: t('new_template_content'),
-      selections: {},
-      tags: []
-    };
-    setTemplates(prev => [...prev, newTemplate]);
-    setActiveTemplateId(newId);
-    setIsEditing(true);
-    
-    // 初始化标题和作者编辑状态
-    setEditingTemplateNameId(newId);
-    setTempTemplateName(newName);
-    setTempTemplateAuthor(newAuthor);
-    
-    // 在移动端自动切换到编辑Tab
-    if (isMobileDevice) {
-      setMobileTab('editor');
-    }
-  };
-
-  const handleDuplicateTemplate = (t_item, e) => {
-      e.stopPropagation();
-      const newId = `tpl_${Date.now()}`;
-      
-      const duplicateName = (name) => {
-        if (typeof name === 'string') return `${name}${t('copy_suffix')}`;
-        const newName = { ...name };
-        Object.keys(newName).forEach(lang => {
-          const suffix = TRANSLATIONS[lang]?.copy_suffix || ' (Copy)';
-          newName[lang] = `${newName[lang]}${suffix}`;
-        });
-        return newName;
-      };
-
-      const isSystemTemplate = INITIAL_TEMPLATES_CONFIG.some(cfg => cfg.id === t_item.id);
-      const newTemplate = {
-          ...t_item,
-          id: newId,
-          name: duplicateName(t_item.name),
-          author: isSystemTemplate ? "PromptFill User" : (t_item.author || "PromptFill User"),
-          selections: { ...t_item.selections }
-      };
-      setTemplates(prev => [...prev, newTemplate]);
-      setActiveTemplateId(newId);
-      // 在移动端自动切换到编辑Tab
-      if (isMobileDevice) {
-        setMobileTab('editor');
-      }
-  };
-
-  const handleDeleteTemplate = (id, e) => {
-    e.stopPropagation();
-    if (templates.length <= 1) {
-      alert(t('alert_keep_one'));
-      return;
-    }
-    if (window.confirm(t('confirm_delete_template'))) {
-      const newTemplates = templates.filter(t => t.id !== id);
-      setTemplates(newTemplates);
-      if (activeTemplateId === id) {
-        setActiveTemplateId(newTemplates[0].id);
-      }
-    }
-  };
-
-  const handleResetTemplate = (id, e) => {
-    e.stopPropagation();
-    if (!window.confirm(t('confirm_reset_template'))) return;
-
-    const original = INITIAL_TEMPLATES_CONFIG.find(t => t.id === id);
-    if (!original) return;
-
-    setTemplates(prev => prev.map(t => 
-      t.id === id ? JSON.parse(JSON.stringify(original)) : t
-    ));
-  };
-
-  const startRenamingTemplate = (t_item, e) => {
-    if (e) e.stopPropagation();
-    setIsEditing(true);
-    setEditingTemplateNameId(t_item.id);
-    setTempTemplateName(getLocalized(t_item.name, language));
-    setTempTemplateAuthor(t_item.author || "");
-  };
-
-  const handleStartEditing = () => {
-    setIsEditing(true);
-    if (activeTemplate) {
-      startRenamingTemplate(activeTemplate);
-    }
-  };
-
-  const handleStopEditing = () => {
-    setIsEditing(false);
-    setEditingTemplateNameId(null);
-  };
-
-  const saveTemplateName = () => {
-    if (tempTemplateName.trim()) {
-      setTemplates(prev => prev.map(t_item => {
-        if (t_item.id === editingTemplateNameId) {
-          const newName = typeof t_item.name === 'object' 
-            ? { ...t_item.name, [language]: tempTemplateName }
-            : tempTemplateName;
-          return { ...t_item, name: newName, author: tempTemplateAuthor };
-        }
-        return t_item;
-      }));
-    }
-    setEditingTemplateNameId(null);
-  };
 
   // 刷新系统模板与词库，保留用户数据
   const handleRefreshSystemData = React.useCallback(() => {
@@ -1426,9 +974,16 @@ const App = () => {
       // Tag filter
       const matchesTags = selectedTags === "" || 
         (t.tags && t.tags.includes(selectedTags));
-      return matchesTags;
+      
+      // Library filter
+      const isOfficial = INITIAL_TEMPLATES_CONFIG.some(cfg => cfg.id === t.id);
+      const matchesLibrary = selectedLibrary === "all" || 
+        (selectedLibrary === "official" && isOfficial) ||
+        (selectedLibrary === "personal" && !isOfficial);
+
+      return matchesTags && matchesLibrary;
     });
-  }, [discoveryTemplates, selectedTags]);
+  }, [discoveryTemplates, selectedTags, selectedLibrary]);
 
   const fileInputRef = useRef(null);
   
@@ -1506,6 +1061,25 @@ const App = () => {
       setTemplates(prev => prev.map(t => 
           t.id === activeTemplateId ? { ...t, imageUrl: defaultUrl, imageUrls: defaultUrls } : t
       ));
+  };
+
+  const handleDeleteImage = () => {
+      setTemplates(prev => prev.map(t => {
+          if (t.id !== activeTemplateId) return t;
+          
+          if (t.imageUrls && Array.isArray(t.imageUrls) && t.imageUrls.length > 1) {
+              const newUrls = t.imageUrls.filter((_, idx) => idx !== currentImageEditIndex);
+              return { 
+                  ...t, 
+                  imageUrls: newUrls, 
+                  imageUrl: newUrls[0] // 默认切回第一张
+              };
+          } else {
+              // 只有一张图时，清除图片
+              return { ...t, imageUrl: "", imageUrls: [] };
+          }
+      }));
+      setCurrentImageEditIndex(0);
   };
 
   const handleSetImageUrl = () => {
@@ -1852,364 +1426,18 @@ const App = () => {
       }
   };
 
-  const updateActiveTemplateContent = React.useCallback((newContent, forceSaveHistory = false) => {
-    // History Management
-    const now = Date.now();
-    const shouldSave = forceSaveHistory || (now - historyLastSaveTime.current > 1000);
+  // 以下函数已移至自定义 Hooks:
+  // - updateActiveTemplateContent -> useEditorHistory
+  // - handleUndo, handleRedo -> useEditorHistory
+  // - parseVariableName -> useLinkageGroups
+  // - detectCursorInVariable -> 需要在组件中重新实现（使用 Hook 返回的状态设置器）
+  // - handleSetGroup, handleRemoveGroup -> 需要在组件中重新实现
+  // - findLinkedVariables -> useLinkageGroups
+  // - updateActiveTemplateSelection -> useLinkageGroups
+  // - handleSelect -> useLinkageGroups
+  // - handleAddCustomAndSelect -> useLinkageGroups
 
-    if (shouldSave) {
-        setHistoryPast(prev => [...prev, activeTemplate.content]);
-        setHistoryFuture([]); // Clear redo stack on new change
-        historyLastSaveTime.current = now;
-    }
-
-    setTemplates(prev => prev.map(t => 
-      t.id === activeTemplateId ? { ...t, content: newContent } : t
-    ));
-  }, [activeTemplate.content, activeTemplateId, setTemplates]);
-
-  const handleUndo = React.useCallback(() => {
-      if (historyPast.length === 0) return;
-      
-      const previous = historyPast[historyPast.length - 1];
-      const newPast = historyPast.slice(0, -1);
-      
-      setHistoryFuture(prev => [activeTemplate.content, ...prev]);
-      setHistoryPast(newPast);
-      
-      // Direct update without saving history again
-      setTemplates(prev => prev.map(t => 
-        t.id === activeTemplateId ? { ...t, content: previous } : t
-      ));
-  }, [activeTemplate.content, activeTemplateId, historyPast, setTemplates]);
-
-  const handleRedo = React.useCallback(() => {
-      if (historyFuture.length === 0) return;
-
-      const next = historyFuture[0];
-      const newFuture = historyFuture.slice(1);
-
-      setHistoryPast(prev => [...prev, activeTemplate.content]);
-      setHistoryFuture(newFuture);
-
-      // Direct update without saving history again
-      setTemplates(prev => prev.map(t => 
-        t.id === activeTemplateId ? { ...t, content: next } : t
-      ));
-  }, [activeTemplate.content, activeTemplateId, historyFuture, setTemplates]);
-
-  // 变量解析工具函数：从变量名中提取 baseKey 和 groupId
-  // 例如: "fruit_1" -> { baseKey: "fruit", groupId: "1" }
-  //      "fruit" -> { baseKey: "fruit", groupId: null }
-  const parseVariableName = React.useCallback((varName) => {
-    const match = varName.match(/^(.+?)(?:_(\d+))?$/);
-    if (match) {
-      return {
-        baseKey: match[1],
-        groupId: match[2] || null
-      };
-    }
-    return { baseKey: varName, groupId: null };
-  }, []);
-
-  // 检测光标是否在变量内，并提取当前变量信息
-  const detectCursorInVariable = React.useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea || !isEditing) {
-      setCursorInVariable(false);
-      setCurrentVariableName(null);
-      setCurrentGroupId(null);
-      return;
-    }
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    // 检查光标是否在 {{...}} 之间
-    if (startPos >= 0 && endPos < text.length && 
-        text.substring(startPos - 2, startPos) === '{{' && 
-        text.substring(endPos, endPos + 2) === '}}') {
-      // 光标在变量内
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      
-      setCursorInVariable(true);
-      setCurrentVariableName(variableName);
-      setCurrentGroupId(parsed.groupId);
-    } else {
-      setCursorInVariable(false);
-      setCurrentVariableName(null);
-      setCurrentGroupId(null);
-    }
-  }, [isEditing, parseVariableName]);
-
-  // 监听光标位置变化
-  React.useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea || !isEditing) return;
-
-    const handleSelectionChange = () => {
-      detectCursorInVariable();
-    };
-
-    textarea.addEventListener('keyup', handleSelectionChange);
-    textarea.addEventListener('click', handleSelectionChange);
-    textarea.addEventListener('select', handleSelectionChange);
-
-    return () => {
-      textarea.removeEventListener('keyup', handleSelectionChange);
-      textarea.removeEventListener('click', handleSelectionChange);
-      textarea.removeEventListener('select', handleSelectionChange);
-    };
-  }, [isEditing, detectCursorInVariable]);
-
-  // 设置分组：为当前变量添加或修改分组后缀
-  const handleSetGroup = React.useCallback((groupNum) => {
-    if (!cursorInVariable || !currentVariableName) return;
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    if (startPos >= 0 && endPos < text.length) {
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      const baseKey = parsed.baseKey;
-      
-      // 构建新的变量名：baseKey_groupNum
-      const newVariableName = `${baseKey}_${groupNum}`;
-      
-      // 替换文本：只替换 {{ 和 }} 之间的内容
-      const before = text.substring(0, startPos);
-      const after = text.substring(endPos);
-      const newText = `${before}${newVariableName}${after}`;
-      
-      // 更新内容
-      const currentContent = activeTemplate.content;
-      const isMultilingual = typeof currentContent === 'object';
-      if (isMultilingual) {
-        updateActiveTemplateContent({
-          ...currentContent,
-          [templateLanguage]: newText
-        }, true);
-      } else {
-        updateActiveTemplateContent(newText, true);
-      }
-
-      // 恢复光标位置（调整偏移）
-      setTimeout(() => {
-        const offset = newVariableName.length - variableName.length;
-        const newCursorPos = cursorPos + offset;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-        detectCursorInVariable();
-      }, 0);
-    }
-  }, [cursorInVariable, currentVariableName, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
-
-  // 移除分组：移除当前变量的分组后缀
-  const handleRemoveGroup = React.useCallback(() => {
-    if (!cursorInVariable || !currentVariableName || !currentGroupId) return;
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    if (startPos >= 0 && endPos < text.length) {
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      const baseKey = parsed.baseKey;
-      
-      // 新的变量名：只保留 baseKey，移除后缀
-      const newVariableName = baseKey;
-      
-      // 替换文本：只替换 {{ 和 }} 之间的内容
-      const before = text.substring(0, startPos);
-      const after = text.substring(endPos);
-      const newText = `${before}${newVariableName}${after}`;
-      
-      // 更新内容
-      const currentContent = activeTemplate.content;
-      const isMultilingual = typeof currentContent === 'object';
-      if (isMultilingual) {
-        updateActiveTemplateContent({
-          ...currentContent,
-          [templateLanguage]: newText
-        }, true);
-      } else {
-        updateActiveTemplateContent(newText, true);
-      }
-
-      // 恢复光标位置（调整偏移）
-      setTimeout(() => {
-        const offset = newVariableName.length - variableName.length;
-        const newCursorPos = cursorPos + offset;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-        detectCursorInVariable();
-      }, 0);
-    }
-  }, [cursorInVariable, currentVariableName, currentGroupId, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
-
-  // 查找模板中所有需要联动的变量
-  // 规则：如果变量有 groupId，找到所有相同 baseKey 且有相同 groupId 的变量
-  // 例如：{{fruit}}_1 和 {{fruit}}_2 如果 groupId 都是 "1"，则联动
-  // 但更常见的用法是：{{fruit}}_1 和 {{fruit}}_2 应该联动（因为它们都是同一组）
-  // 我们使用一个更简单的规则：所有相同 baseKey 且有 groupId 的变量都联动（无论 groupId 是否相同）
-  // 或者更精确：相同 baseKey 且 groupId 相同的变量联动
-  // 为了灵活性，我们采用：相同 baseKey 且都有 groupId 的变量都联动（简化版）
-  // 但用户可能想要：{{fruit}}_1 和 {{fruit}}_2 联动，{{fruit}}_3 和 {{fruit}}_4 联动
-  // 这意味着我们需要一个更智能的规则
-  // 
-  // 重新理解需求：用户说 "_1的成组联动，_2的成组联动"
-  // 这意味着：所有带 _1 后缀的变量联动，所有带 _2 后缀的变量联动
-  // 所以规则应该是：相同 baseKey 且相同 groupId 的变量联动
-  const findLinkedVariables = React.useCallback((template, baseKey, groupId) => {
-    if (!groupId) return []; // 没有 groupId 的变量不联动
-    
-    const linkedKeys = [];
-    const content = typeof template.content === 'object' 
-      ? Object.values(template.content).join('\n')
-      : template.content || '';
-    
-    // 找到所有 {{baseKey_groupId}} 格式的变量
-    const allMatches = content.matchAll(/\{\{([^}]+)\}\}/g);
-    const counters = {};
-    
-    for (const match of allMatches) {
-      const fullKey = match[1].trim();
-      const parsed = parseVariableName(fullKey);
-      
-      // 匹配相同 baseKey 且相同 groupId 的变量
-      // 例如：{{fruit}}_1 和 {{fruit}}_1 会联动，但 {{fruit}}_1 和 {{fruit}}_2 不会
-      if (parsed.baseKey === baseKey && parsed.groupId === groupId) {
-        const idx = counters[fullKey] || 0;
-        counters[fullKey] = idx + 1;
-        linkedKeys.push(`${fullKey}-${idx}`);
-      }
-    }
-    
-    return linkedKeys;
-  }, [parseVariableName]);
-
-  const updateActiveTemplateSelection = React.useCallback((uniqueKey, value, linkedKeys = []) => {
-    setTemplates(prev => prev.map(t => {
-      if (t.id === activeTemplateId) {
-        const newSelections = { ...t.selections, [uniqueKey]: value };
-        
-        // 同步更新所有联动的变量
-        linkedKeys.forEach(linkedKey => {
-          if (linkedKey !== uniqueKey) {
-            newSelections[linkedKey] = value;
-          }
-        });
-        
-        return {
-          ...t,
-          selections: newSelections
-        };
-      }
-      return t;
-    }));
-  }, [activeTemplateId, setTemplates]);
-
-  // --- Bank Actions ---
-
-  const handleSelect = React.useCallback((key, index, value) => {
-    const uniqueKey = `${key}-${index}`;
-    
-    // 解析变量名，检查是否有联动组
-    const parsed = parseVariableName(key);
-    
-    // 如果有关联组，找到所有需要联动的变量
-    let linkedKeys = [];
-    if (parsed.groupId) {
-      const activeTemplate = templates.find(t => t.id === activeTemplateId);
-      if (activeTemplate) {
-        linkedKeys = findLinkedVariables(activeTemplate, parsed.baseKey, parsed.groupId);
-      }
-    }
-    
-    updateActiveTemplateSelection(uniqueKey, value, linkedKeys);
-    setActivePopover(null);
-  }, [parseVariableName, findLinkedVariables, updateActiveTemplateSelection, templates, activeTemplateId]);
-
-  const handleAddCustomAndSelect = React.useCallback((key, index, newValue) => {
-    if (!newValue || !newValue.trim()) return;
-    
-    // 解析变量名，获取 baseKey（词库的 key）
-    const parsed = parseVariableName(key);
-    const baseKey = parsed.baseKey;
-    
-    // 1. Add to bank if not exists (使用 baseKey)
-    if (banks[baseKey] && !banks[baseKey].options.includes(newValue)) {
-        handleAddOption(baseKey, newValue);
-    }
-    
-    // 2. Select it (使用完整的 key，可能包含 groupId)
-    handleSelect(key, index, newValue);
-  }, [banks, handleSelect, parseVariableName]);
-
-  const handleAddOption = React.useCallback((key, newOption) => {
-    if (!newOption.trim()) return;
-    setBanks(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        options: [...prev[key].options, newOption]
-      }
-    }));
-  }, [setBanks]);
-
-  const handleDeleteOption = React.useCallback((key, optionToDelete) => {
-    setBanks(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        options: prev[key].options.filter(opt => opt !== optionToDelete)
-      }
-    }));
-  }, [setBanks]);
+  // handleAddOption 和 handleDeleteOption 已移至 Hook 调用之前（第 943 行）
 
   const handleStartAddBank = (catId) => {
     setNewBankCategory(catId);
@@ -2366,12 +1594,60 @@ const App = () => {
 
     setIsExporting(true);
     
+    // --- 新增：尝试获取短链接并预处理二维码 ---
+    let displayUrl = window.location.origin + window.location.pathname;
+    // 确保 displayUrl 不会以双斜杠结尾，且至少有一个基础值
+    if (!displayUrl || displayUrl === 'null' || displayUrl === 'undefined') {
+        displayUrl = "https://www.aipromptfill.com";
+    }
+    
+    let qrContentUrl = "https://www.aipromptfill.com"; // 默认官网地址
+    let qrBase64 = "/QRCode.png";
+    
+    try {
+        const compressed = compressTemplate(activeTemplate, banks, categories);
+        // 尝试向服务器换取短码
+        const shortCode = await getShortCodeFromServer(compressed);
+        const base = PUBLIC_SHARE_URL || displayUrl;
+        const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+        
+        if (shortCode) {
+            // 成功获取短码，二维码和文字都指向短链接
+            const shortUrl = `${normalizedBase}/#/share?share=${shortCode}`;
+            displayUrl = shortUrl;
+            qrContentUrl = shortUrl;
+        } else if (compressed) {
+            // 未获取到短码（长链接情况），文字显示长链接，但二维码指向官网
+            displayUrl = `${normalizedBase}/#/share?share=${compressed}`;
+            qrContentUrl = "https://www.aipromptfill.com";
+        }
+        
+        // 生成二维码 Base64 (避免跨域问题)
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(qrContentUrl)}`;
+        const qrResponse = await fetch(qrApiUrl);
+        if (qrResponse.ok) {
+            const qrBlob = await qrResponse.blob();
+            qrBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(qrBlob);
+            });
+        }
+    } catch (e) {
+        console.warn("获取短链接或二维码失败:", e);
+    }
+    
+    // 如果是极长的链接（超过 150 字符），进行截断显示，防止撑破布局
+    // 但在导出 DOM 中我们要确保它能换行
+    const displayUrlText = displayUrl.length > 150 
+        ? displayUrl.substring(0, 140) + '...' 
+        : displayUrl;
+    
     // --- 关键修复：预处理图片为 Base64 ---
     // 这能彻底解决 html2canvas 的跨域 (CORS) 和图片加载不全问题
-    // 我们手动 fetch 图片 blob 并转为 base64，绕过 canvas 的跨域限制
     const templateDefault = INITIAL_TEMPLATES_CONFIG.find(t => t.id === activeTemplateId);
     const originalImageSrc = activeTemplate.imageUrl || templateDefault?.imageUrl || "";
-    let tempBase64Src = null;
+    let tempBase64Src = imageBase64Cache.current[originalImageSrc] || null;
     const imgElement = element.querySelector('img');
 
     if (imgElement && originalImageSrc) {
@@ -2381,25 +1657,47 @@ const App = () => {
         }
     }
 
-    if (imgElement && originalImageSrc && originalImageSrc.startsWith('http')) {
+    // 如果没缓存，尝试获取
+    if (!tempBase64Src && imgElement && originalImageSrc && originalImageSrc.startsWith('http')) {
+        const fetchWithRetry = async (url) => {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Fetch failed');
+                const blob = await response.blob();
+                return await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                return null;
+            }
+        };
+
         try {
-            // 尝试通过 fetch 获取图片数据
-            const response = await fetch(originalImageSrc);
-            const blob = await response.blob();
-            tempBase64Src = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
+            // 1. 尝试直接获取
+            tempBase64Src = await fetchWithRetry(originalImageSrc);
             
-            // 临时替换为 Base64
-            imgElement.src = tempBase64Src;
-            await waitForImageLoad(imgElement);
+            // 2. 如果失败，尝试使用 weserv.nl 作为 CORS 代理
+            if (!tempBase64Src) {
+                console.log("直接获取图片失败，尝试使用代理...");
+                const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(originalImageSrc)}`;
+                tempBase64Src = await fetchWithRetry(proxyUrl);
+            }
+
+            if (tempBase64Src) {
+                // 存入缓存
+                imageBase64Cache.current[originalImageSrc] = tempBase64Src;
+            }
         } catch (e) {
-            console.warn("图片 Base64 转换失败，尝试直接导出", e);
-            // 如果 fetch 失败（比如彻底的 CORS 封锁），我们只能尝试允许 canvas 污染
-            // 但通常 fetch 失败意味着 canvas 也会失败
+            console.warn("图片 Base64 转换失败", e);
         }
+    }
+
+    if (tempBase64Src && imgElement) {
+        // 临时替换为 Base64
+        imgElement.src = tempBase64Src;
+        await waitForImageLoad(imgElement);
     } else if (imgElement) {
         // 即便没转 base64，也要确保当前展示图已加载完成
         await waitForImageLoad(imgElement);
@@ -2609,13 +1907,13 @@ const App = () => {
                                ${versionText ? `<span style="font-size: 11px; padding: 3px 10px; background: #fff7ed; color: #f97316; border-radius: 5px; font-weight: 600; border: 1px solid #fed7aa;">${versionText}</span>` : ''}
                            </div>
                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px; font-weight: 500;">提示词填空器 - 让分享更简单</div>
-                           <div style="font-size: 11px; color: #3b82f6; font-weight: 500; background: #eff6ff; padding: 4px 8px; border-radius: 4px; display: inline-block; letter-spacing: 0.3px;">
-                               ${window.location.origin}${window.location.pathname}
+                           <div style="font-size: 11px; color: #3b82f6; font-weight: 500; background: #eff6ff; padding: 4px 10px; border-radius: 6px; display: block; letter-spacing: 0.3px; word-break: break-all; max-width: 100%; min-height: 14px; line-height: 1.4;">
+                               ${displayUrlText}
                            </div>
                        </div>
                        <div style="display: flex; align-items: center;">
                            <div style="text-align: center;">
-                               <img src="/QRCode.png" 
+                               <img src="${qrBase64}" 
                                     style="width: 85px; height: 85px; border: 3px solid #e2e8f0; border-radius: 8px; display: block; background: white;" 
                                     alt="QR Code" />
                                <div style="font-size: 9px; color: #94a3b8; margin-top: 4px; font-weight: 500;">扫码体验</div>
@@ -2778,14 +2076,12 @@ const App = () => {
   // --- Renderers ---
 
   const globalContainerStyle = isDarkMode ? {
-    background: 'linear-gradient(180deg, #3B3B3B 0%, #242120 100%)',
     borderRadius: '16px',
     border: '1px solid transparent',
     backgroundImage: 'linear-gradient(180deg, #3B3B3B, #242120), linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%)',
     backgroundOrigin: 'border-box',
     backgroundClip: 'padding-box, border-box',
   } : {
-    background: 'linear-gradient(180deg, #FAF5F1 0%, #F6EBE6 100%)',
     borderRadius: '16px',
     border: '1px solid transparent',
     backgroundImage: 'linear-gradient(180deg, #FAF5F1, #F6EBE6), linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
@@ -2794,12 +2090,8 @@ const App = () => {
   };
 
   return (
-    <div 
-      className={`flex h-screen w-screen overflow-hidden ${isDarkMode ? 'dark-mode' : 'mesh-gradient-bg md:p-4'}`}
-      style={isDarkMode ? { 
-        background: 'linear-gradient(180deg, #323131 0%, #181716 100%)',
-        padding: isMobileDevice ? '0' : '16px'
-      } : {}}
+    <div
+      className={`flex h-screen w-screen overflow-hidden p-0 md:p-4 ${isDarkMode ? 'dark-mode dark-gradient-bg' : 'mesh-gradient-bg'}`}
       onTouchMove={(e) => touchDraggingVar && onTouchDragMove(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={(e) => touchDraggingVar && onTouchDragEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
     >
@@ -2918,8 +2210,8 @@ const App = () => {
             setThemeMode={setThemeMode}
           />
         ) : showDiscoveryOverlay ? (
-          <DiscoveryView 
-            filteredTemplates={discoveryTemplates}
+          <DiscoveryView
+            filteredTemplates={filteredTemplates}
             setActiveTemplateId={setActiveTemplateId}
             setDiscoveryView={handleSetDiscoveryView}
             setZoomedImage={setZoomedImage}
@@ -2945,6 +2237,12 @@ const App = () => {
             globalContainerStyle={globalContainerStyle}
             themeMode={themeMode}
             setThemeMode={setThemeMode}
+            templates={templates}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            selectedLibrary={selectedLibrary}
+            setSelectedLibrary={setSelectedLibrary}
+            TEMPLATE_TAGS={TEMPLATE_TAGS}
           />
         ) : (
           <div className="flex-1 flex gap-2 lg:gap-4 overflow-hidden">
@@ -2998,7 +2296,7 @@ const App = () => {
               className={`
                 ${(mobileTab === 'editor' || mobileTab === 'settings') ? 'flex fixed inset-0 z-50 md:static md:bg-transparent' : 'hidden'} 
                 ${(mobileTab === 'editor' || mobileTab === 'settings') && isMobileDevice ? (isDarkMode ? 'bg-[#242120]' : 'bg-white') : ''}
-                md:flex flex-1 shrink-[1] min-w-[400px] flex-col h-full overflow-hidden relative
+                md:flex flex-1 shrink-[1] md:min-w-[400px] flex-col h-full overflow-hidden relative
                 md:rounded-2xl origin-left
               `}
             >
@@ -3027,10 +2325,10 @@ const App = () => {
               
               {/* 顶部工具栏 */}
               {(!isMobileDevice || mobileTab !== 'settings') && (
-                <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex flex-col md:flex-row md:justify-between md:items-center z-20 h-auto ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
-                  {/* 第一行：语言切换与模式切换 (Mobile) / 标题与语言 (Desktop) */}
-                  <div className="w-full md:w-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+                <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex flex-col gap-3 z-20 h-auto ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
+                  {/* 第一行：标题、语言切换与模式切换 */}
+                  <div className="w-full flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 overflow-hidden">
                       {/* Language Toggle - Mobile: Left of Title */}
                       {isMobileDevice && activeTemplate && (() => {
                         const templateLangs = activeTemplate.language ? (Array.isArray(activeTemplate.language) ? activeTemplate.language : [activeTemplate.language]) : ['cn', 'en'];
@@ -3103,84 +2401,57 @@ const App = () => {
                       })()}
                     </div>
 
-                    {/* 模式切换 (Mobile Only) */}
-                    <div className="md:hidden">
-                      <div className={`premium-toggle-container ${isDarkMode ? 'dark' : 'light'}`}>
-                          <button
-                              onClick={handleStopEditing}
-                              className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${!isEditing ? 'is-active' : ''}`}
-                              title={t('preview_mode')}
-                          >
-                              <Eye size={14} /> <span className="text-[11px] ml-1">{t('preview_mode')}</span>
-                          </button>
-                          <button
-                              onClick={handleStartEditing}
-                              className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${isEditing ? 'is-active' : ''}`}
-                              title={t('edit_mode')}
-                          >
-                              <Edit3 size={14} /> <span className="text-[11px] ml-1">{t('edit_mode')}</span>
-                          </button>
-                      </div>
+                    {/* 模式切换 */}
+                    <div className={`premium-toggle-container ${isDarkMode ? 'dark' : 'light'} shrink-0`}>
+                        <button
+                            onClick={handleStopEditing}
+                            className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${!isEditing ? 'is-active' : ''}`}
+                            title={t('preview_mode')}
+                        >
+                            <Eye size={14} /> <span className="hidden md:inline ml-1.5">{t('preview_mode')}</span>
+                        </button>
+                        <button
+                            onClick={handleStartEditing}
+                            className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${isEditing ? 'is-active' : ''}`}
+                            title={t('edit_mode')}
+                        >
+                            <Edit3 size={14} /> <span className="hidden md:inline ml-1.5">{t('edit_mode')}</span>
+                        </button>
                     </div>
                   </div>
                   
-                  {/* 第二行：分享、保存、复制 (Mobile) / 模式切换与按钮 (Desktop) */}
-                  <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 md:gap-3 shrink-0 mt-2 md:mt-0">
-                     {/* 模式切换 (Desktop Only) */}
-                     {!isMobileDevice && (
-                        <>
-                          <div className={`premium-toggle-container ${isDarkMode ? 'dark' : 'light'}`}>
-                              <button
-                                  onClick={handleStopEditing}
-                                  className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${!isEditing ? 'is-active' : ''}`}
-                                  title={t('preview_mode')}
-                              >
-                                  <Eye size={14} /> <span className="hidden md:inline">{t('preview_mode')}</span>
-                              </button>
-                              <button
-                                  onClick={handleStartEditing}
-                                  className={`premium-toggle-item ${isDarkMode ? 'dark' : 'light'} ${isEditing ? 'is-active' : ''}`}
-                                  title={t('edit_mode')}
-                              >
-                                  <Edit3 size={14} /> <span className="hidden md:inline">{t('edit_mode')}</span>
-                              </button>
-                          </div>
-                          <div className={`h-6 w-px mx-1 hidden md:block ${isDarkMode ? 'bg-white/5' : 'bg-gray-200'}`}></div>
-                        </>
-                     )}
+                  {/* 第二行：分享、保存、复制按钮 */}
+                  <div className="w-full flex items-center justify-end gap-1.5 md:gap-3 shrink-0">
+                    <PremiumButton 
+                        onClick={handleShareLink} 
+                        title={language === 'cn' ? '分享模版' : t('share_link')} 
+                        icon={Share2} 
+                        isDarkMode={isDarkMode}
+                        className="flex-none"
+                    >
+                        <span className="hidden md:inline ml-1.5">{language === 'cn' ? '分享模版' : t('share')}</span>
+                    </PremiumButton>
 
-                    <div className="flex-1 md:flex-none flex items-center justify-between md:justify-end gap-2">
-                      <PremiumButton 
-                          onClick={handleShareLink} 
-                          title={t('share_link')} 
-                          icon={Share2} 
-                          isDarkMode={isDarkMode}
-                          className="flex-1 md:flex-none"
-                      >
-                          <span className="text-[11px] md:text-sm">{t('share')}</span>
-                      </PremiumButton>
-
-                      <PremiumButton 
-                          onClick={handleExportImage} 
-                          disabled={isEditing || isExporting} 
-                          title={isExporting ? t('exporting') : t('export_image')} 
-                          icon={ImageIcon} 
-                          isDarkMode={isDarkMode}
-                          className="flex-1 md:flex-none"
-                      >
-                          <span className="text-[11px] md:text-sm">{isExporting ? t('exporting') : t('export_image')}</span>
-                      </PremiumButton>
-                      <PremiumButton 
-                          onClick={handleCopy} 
-                          title={copied ? t('copied') : t('copy_result')} 
-                          icon={copied ? Check : CopyIcon} 
-                          active={true}
-                          isDarkMode={isDarkMode}
-                          className="flex-1 md:flex-none"
-                      >
-                           <span className="text-[11px] md:text-sm ml-1">{copied ? t('copied') : t('copy_result')}</span>
-                      </PremiumButton>
-                    </div>
+                    <PremiumButton 
+                        onClick={handleExportImage} 
+                        disabled={isEditing || isExporting} 
+                        title={isExporting ? t('exporting') : (language === 'cn' ? '导出长图' : t('export_image'))} 
+                        icon={ImageIcon} 
+                        isDarkMode={isDarkMode}
+                        className="flex-none"
+                    >
+                        <span className="hidden md:inline ml-1.5 truncate">{isExporting ? (language === 'cn' ? '导出中...' : 'Exp...') : (language === 'cn' ? '导出长图' : 'Img')}</span>
+                    </PremiumButton>
+                    <PremiumButton 
+                        onClick={handleCopy} 
+                        title={copied ? t('copied') : (language === 'cn' ? '复制结果' : t('copy_result'))} 
+                        icon={copied ? Check : CopyIcon} 
+                        active={true}
+                        isDarkMode={isDarkMode}
+                        className="flex-none"
+                    >
+                         <span className="hidden md:inline ml-1.5 truncate">{copied ? t('copied') : (language === 'cn' ? '复制结果' : 'Copy')}</span>
+                    </PremiumButton>
                   </div>
                 </div>
               )}
@@ -3283,6 +2554,9 @@ const App = () => {
                                   banks={banks}
                                   categories={categories}
                                   isDarkMode={isDarkMode}
+                                  activeTemplate={activeTemplate}
+                                  language={language}
+                                  t={t}
                               />
                           </div>
                       ) : (
@@ -3303,6 +2577,7 @@ const App = () => {
                               fileInputRef={fileInputRef}
                               setShowImageUrlInput={setShowImageUrlInput}
                               handleResetImage={handleResetImage}
+                              handleDeleteImage={handleDeleteImage}
                               language={templateLanguage}
                               setLanguage={setTemplateLanguage}
                               // 标签编辑相关
@@ -3400,224 +2675,43 @@ const App = () => {
           </div>
         )}
       </div>
-      {/* --- Share Import Modal --- */}
-      {showShareImportModal && sharedTemplateData && (
-        <div 
-          className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
-          onClick={() => setShowShareImportModal(false)}
-        >
-          <div 
-            className={`w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden border animate-scale-up ${isDarkMode ? 'bg-[#242120] border-white/5 shadow-black/50' : 'bg-white border-gray-100'}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={`p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-              <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                <div className="p-2 bg-orange-500 rounded-xl text-white">
-                  <Share2 size={20} />
-                </div>
-                {t('import_shared_template')}
-              </h3>
-              <button 
-                onClick={() => setShowShareImportModal(false)}
-                className={`p-2 rounded-xl transition-all ${isDarkMode ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-200 text-gray-500'}`}
-              >
-                <X size={20}/>
-              </button>
-            </div>
-            
-            <div className="p-8 space-y-6">
-              <div className="flex items-start gap-6">
-                <div className={`w-24 h-24 shrink-0 rounded-3xl overflow-hidden shadow-lg border-4 ${isDarkMode ? 'border-white/10' : 'border-white'}`}>
-                  {sharedTemplateData.imageUrl ? (
-                    <img src={sharedTemplateData.imageUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-                      <ImageIcon size={32} className="text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className={`text-2xl font-black tracking-tight truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                    {getLocalized(sharedTemplateData.name, language)}
-                  </h4>
-                  <p className="text-sm font-bold text-orange-500 uppercase tracking-widest mt-1">
-                    {sharedTemplateData.author ? `${t('shared_by')} ${sharedTemplateData.author}` : t('official')}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {sharedTemplateData.tags?.map(tag => (
-                      <span key={tag} className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${TAG_STYLES[tag] || TAG_STYLES["default"]}`}>
-                        {displayTag(tag)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className={`p-6 rounded-2xl border text-sm leading-relaxed max-h-[300px] overflow-y-auto custom-scrollbar transition-all ${isDarkMode ? 'bg-black/40 border-white/5 text-gray-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]' : 'bg-gray-100/50 border-gray-200 text-gray-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]'}`}>
-                <div className="whitespace-pre-wrap font-mono">
-                  {getLocalized(sharedTemplateData.content, language)}
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-3">
-                <PremiumButton
-                  onClick={() => setShowShareImportModal(false)}
-                  isDarkMode={isDarkMode}
-                  className="flex-1 size-lg"
-                  icon={X}
-                >
-                  {t('cancel')}
-                </PremiumButton>
-                <PremiumButton
-                  onClick={handleImportSharedTemplate}
-                  active={true}
-                  isDarkMode={isDarkMode}
-                  className="flex-1 size-lg"
-                  icon={Download}
-                >
-                  {t('import_now')}
-                </PremiumButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Share Options Modal --- */}
-      {showShareOptionsModal && activeTemplate && (
-        <div 
-          className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
-          onClick={() => setShowShareOptionsModal(false)}
-        >
-          <div 
-            className={`w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden border animate-scale-up ${isDarkMode ? 'bg-[#242120] border-white/5' : 'bg-white border-gray-100'}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-8 relative">
-              <button 
-                onClick={() => setShowShareOptionsModal(false)}
-                className={`absolute top-6 right-6 p-2 rounded-full transition-all ${isDarkMode ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}
-              >
-                <X size={20} />
-              </button>
-              <h3 className={`text-xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {language === 'cn' ? '分享模版' : 'Share Template'}
-              </h3>
-              <p className={`text-xs font-bold mb-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {language === 'cn' ? '选择您喜欢的分享方式' : 'Choose your preferred sharing method'}
-              </p>
-
-              <div className="space-y-4">
-                <PremiumButton 
-                  onClick={doCopyShareLink}
-                  isDarkMode={isDarkMode}
-                  className="w-full size-lg"
-                  icon={CopyIcon}
-                  justify="start"
-                >
-                  <div className="flex flex-col items-start ml-2 text-left">
-                    <span className="text-sm font-black">
-                      {language === 'cn' ? '链接分享' : 'Share via Link'}
-                    </span>
-                    <span className={`text-[10px] font-bold opacity-50`}>
-                      {language === 'cn' ? '复制完整 URL 链接' : 'Copy the full URL link'}
-                    </span>
-                  </div>
-                </PremiumButton>
-
-                <PremiumButton 
-                  onClick={handleShareToken}
-                  isDarkMode={isDarkMode}
-                  className="w-full size-lg"
-                  icon={Share2}
-                  justify="start"
-                >
-                  <div className="flex flex-col items-start ml-2 text-left">
-                    <span className="text-sm font-black">
-                      {language === 'cn' ? '口令分享 (推荐)' : 'Share via Token'}
-                    </span>
-                    <span className={`text-[10px] font-bold opacity-70`}>
-                      {language === 'cn' ? '适合微信分享，不易被拦截' : 'Best for WeChat, anti-blocking'}
-                    </span>
-                  </div>
-                </PremiumButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Import Token Modal --- */}
-      {showImportTokenModal && (
-        <div 
-          className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
-          onClick={() => {
-            setShowImportTokenModal(false);
-            setImportTokenValue("");
-          }}
-        >
-          <div 
-            className={`w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden border animate-scale-up ${isDarkMode ? 'bg-[#242120] border-white/5' : 'bg-white border-gray-100'}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-8 relative">
-              <button 
-                onClick={() => {
-                  setShowImportTokenModal(false);
-                  setImportTokenValue("");
-                }}
-                className={`absolute top-6 right-6 p-2 rounded-full transition-all ${isDarkMode ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}
-              >
-                <X size={20} />
-              </button>
-              <h3 className={`text-xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {language === 'cn' ? '导入模版' : 'Import Template'}
-              </h3>
-              <p className={`text-xs font-bold mb-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {language === 'cn' ? '请输入分享口令或链接' : 'Please enter share token or link'}
-              </p>
-
-              <div className="space-y-4">
-                <div className={`relative group ${isDarkMode ? 'dark' : 'light'}`}>
-                  <input 
-                    autoFocus
-                    type="text" 
-                    value={importTokenValue} 
-                    onChange={(e) => setImportTokenValue(e.target.value)}
-                    placeholder={language === 'cn' ? '粘贴口令或链接...' : 'Paste token or link...'}
-                    className={`w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 outline-none ${
-                      isDarkMode 
-                        ? 'bg-black/20 border-white/10 text-white focus:border-orange-500/50' 
-                        : 'bg-gray-50 border-gray-100 text-gray-800 focus:border-orange-500/30'
-                    }`}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleManualTokenImport(importTokenValue);
-                        setShowImportTokenModal(false);
-                        setImportTokenValue("");
-                      }
-                    }}
-                  />
-                </div>
-
-                <PremiumButton 
-                  onClick={() => {
-                    handleManualTokenImport(importTokenValue);
-                    setShowImportTokenModal(false);
-                    setImportTokenValue("");
-                  }}
-                  active={true}
-                  isDarkMode={isDarkMode}
-                  className="w-full size-lg"
-                  icon={Download}
-                >
-                  {t('confirm')}
-                </PremiumButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ShareImportModal
+        isOpen={showShareImportModal}
+        templateData={sharedTemplateData}
+        onClose={() => setShowShareImportModal(false)}
+        onImport={handleImportSharedTemplate}
+        t={t}
+        TAG_STYLES={TAG_STYLES}
+        displayTag={displayTag}
+        isDarkMode={isDarkMode}
+        language={language}
+      />
+      <ShareOptionsModal
+        isOpen={showShareOptionsModal && !!activeTemplate}
+        onClose={() => setShowShareOptionsModal(false)}
+        onCopyLink={doCopyShareLink}
+        onCopyToken={handleShareToken}
+        isGenerating={isGenerating}
+        isDarkMode={isDarkMode}
+        language={language}
+      />
+      <ImportTokenModal
+        isOpen={showImportTokenModal}
+        onClose={() => {
+          setShowImportTokenModal(false);
+          setImportTokenValue("");
+        }}
+        tokenValue={importTokenValue}
+        onTokenChange={(value) => setImportTokenValue(value)}
+        onConfirm={() => {
+          handleManualTokenImport(importTokenValue);
+          setShowImportTokenModal(false);
+          setImportTokenValue("");
+        }}
+        isDarkMode={isDarkMode}
+        language={language}
+        confirmText={t("confirm")}
+      />
 
       {/* --- Add Bank Modal --- */}
       <AddBankModal
@@ -3635,486 +2729,76 @@ const App = () => {
         isDarkMode={isDarkMode}
       />
 
-      {/* 隐藏的图片选择器 */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept="image/*"
-        onChange={handleUploadImage}
+      {/* --- Image Preview Modal --- */}
+      <ImagePreviewModal
+        zoomedImage={zoomedImage}
+        templates={templates}
+        language={language}
+        setLanguage={setLanguage}
+        t={t}
+        TAG_STYLES={TAG_STYLES}
+        displayTag={displayTag}
+        setActiveTemplateId={setActiveTemplateId}
+        setDiscoveryView={setDiscoveryView}
+        setZoomedImage={setZoomedImage}
+        setMobileTab={setMobileTab}
+        handleRefreshSystemData={handleRefreshSystemData}
+        setIsSettingsOpen={setIsSettingsOpen}
+        isDarkMode={isDarkMode}
       />
 
-      {/* 隐藏的图片选择器 */}
+      {/* --- 更新通知组件 --- */}
+      <DataUpdateNotice
+        isOpen={showDataUpdateNotice}
+        onLater={() => {
+          setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
+          setShowDataUpdateNotice(false);
+        }}
+        onUpdate={handleAutoUpdate}
+        t={t}
+      />
 
-      {/* --- Settings Modal - Enhanced UI (Legacy/Mobile) --- */}
-      {isSettingsOpen && isMobileDevice && (
-        <div 
-          className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
-          onClick={() => setIsSettingsOpen(false)}
-        >
-          <div 
-            className="bg-gradient-to-br from-white via-white to-gray-50/30 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border-2 border-white/60 animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header with gradient background */}
-            <div className="relative flex items-center justify-between px-6 py-5 border-b border-gray-100/80 bg-gradient-to-r from-orange-50/50 via-white to-blue-50/30 backdrop-blur">
-              {/* Decorative gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-blue-500/5"></div>
-              
-              <div className="relative flex items-center gap-3 text-gray-800">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/30">
-                  <Settings size={20} />
-                </div>
-                <div>
-                  <p className="text-base font-bold tracking-tight">{t('settings')}</p>
-                  <p className="text-xs text-gray-500 font-medium">{t('app_title')}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="relative p-2.5 text-gray-400 hover:text-gray-700 hover:bg-white/80 rounded-xl transition-all duration-200 hover:shadow-md hover:scale-110"
-              >
-                <X size={18} />
-              </button>
-            </div>
+      <AppUpdateNotice
+        isOpen={showAppUpdateNotice}
+        noticeType={updateNoticeType}
+        onRefresh={() => {
+          // 如果是数据更新，也可以尝试直接触发更新逻辑
+          if (updateNoticeType === 'data') {
+            handleAutoUpdate();
+            setShowAppUpdateNotice(false);
+          } else {
+            window.location.reload();
+          }
+        }}
+        onClose={() => setShowAppUpdateNotice(false)}
+        t={t}
+      />
 
-            <div className="p-6 md:p-8 space-y-8 max-h-[75vh] overflow-y-auto">
-              
-              {/* Import / Export - Enhanced */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('import_template')} / {t('export_all_templates')}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="block">
-                    <input 
-                      type="file" 
-                      accept=".json" 
-                      onChange={handleImportTemplate}
-                      className="hidden" 
-                      id="import-template-input-modal"
-                    />
-                    <div 
-                      onClick={() => document.getElementById('import-template-input-modal').click()}
-                      className="cursor-pointer w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-gray-700 rounded-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <Download size={18} />
-                      <span>{t('import_template')}</span>
-                    </div>
-                  </label>
-                  <button
-                    onClick={handleExportAllTemplates}
-                    className="w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl transition-all duration-300 border-2 border-orange-500 hover:border-orange-600 flex items-center justify-center gap-2.5 shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]"
-                  >
-                    <Upload size={18} />
-                    <span>{t('export_all_templates')}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Data Refresh */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('refresh_system')}</p>
-                </div>
-                <button
-                  onClick={handleRefreshSystemData}
-                  className="w-full text-center px-5 py-4 text-sm font-semibold bg-white hover:bg-orange-50 text-orange-600 rounded-2xl transition-all duration-300 border-2 border-orange-100 hover:border-orange-200 flex items-center justify-center gap-2.5 shadow-sm"
-                >
-                  <RefreshCw size={18} />
-                  <span>{t('refresh_system')}</span>
-                </button>
-              </div>
-
-              {/* Storage - Enhanced */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('storage_mode')}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={handleSwitchToLocalStorage}
-                    className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
-                      storageMode === 'browser' 
-                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/30' 
-                        : 'bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-[1.02]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 relative z-10">
-                      <Globe size={18} />
-                      <span>{t('use_browser_storage')}</span>
-                    </div>
-                    {storageMode === 'browser' && (
-                      <div className="relative z-10">
-                        <Check size={18} className="animate-in zoom-in duration-300" />
-                      </div>
-                    )}
-                    {storageMode === 'browser' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-transparent"></div>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleSelectDirectory}
-                    disabled={!isFileSystemSupported || isMobileDevice}
-                    className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
-                      storageMode === 'folder' 
-                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-500 shadow-lg shadow-green-500/30' 
-                        : `bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 ${(!isFileSystemSupported || isMobileDevice) ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-300 hover:shadow-md hover:scale-[1.02]'}`
-                    }`}
-                    title={isMobileDevice ? t('use_browser_storage') : (!isFileSystemSupported ? t('browser_not_supported') : '')}
-                  >
-                    <div className="flex items-center gap-3 relative z-10">
-                      <Download size={18} />
-                      <span>{t('use_local_folder')}</span>
-                    </div>
-                    {storageMode === 'folder' && (
-                      <div className="relative z-10">
-                        <Check size={18} className="animate-in zoom-in duration-300" />
-                      </div>
-                    )}
-                    {storageMode === 'folder' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-transparent"></div>
-                    )}
-                  </button>
-                </div>
-
-                {storageMode === 'folder' && directoryHandle && (
-                  <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200/60 rounded-xl text-sm text-green-700 flex items-center justify-between gap-3 shadow-sm animate-in slide-in-from-top duration-300">
-                    <div className="flex items-center gap-2.5 font-medium">
-                      <div className="p-1 bg-green-500 rounded-lg text-white">
-                        <Check size={14} />
-                      </div>
-                      <span>{t('auto_save_enabled')}</span>
-                    </div>
-                    <button
-                      onClick={handleManualLoadFromFolder}
-                      className="px-4 py-1.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg text-xs font-semibold transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
-                    >
-                      {t('load_from_folder')}
-                    </button>
-                  </div>
-                )}
-
-                {storageMode === 'browser' && (
-                  <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
-                    <p className="text-xs text-blue-700 font-medium">
-                      {t('storage_used')}: <span className="font-bold">{getStorageSize()} KB</span>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Danger Zone - Enhanced */}
-              <div className="space-y-4 pt-4 border-t-2 border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-red-400 to-red-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-red-600">{t('clear_all_data')}</p>
-                </div>
-                <button
-                  onClick={handleClearAllData}
-                  className="w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 hover:text-red-700 rounded-2xl transition-all duration-300 border-2 border-red-200 hover:border-red-300 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg hover:scale-[1.02] group"
-                >
-                  <Trash2 size={18} className="group-hover:animate-pulse" />
-                  <span>{t('clear_all_data')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Image Action Menu (Portal) --- */}
-      {showImageActionMenu && (() => {
-        const buttonEl = window.__imageMenuButtonRef;
-        if (!buttonEl) return null;
-        const rect = buttonEl.getBoundingClientRect();
-        return (
-          <>
-            {/* 背景遮罩层 - 点击关闭菜单 */}
-            <div 
-              className="fixed inset-0 z-[9998]"
-              onClick={() => setShowImageActionMenu(false)}
-            />
-            {/* 菜单内容 */}
-            <div 
-              style={{
-                position: 'fixed',
-                top: `${rect.bottom + 8}px`,
-                left: `${rect.left}px`,
-                zIndex: 9999,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden min-w-[140px] animate-in fade-in slide-in-from-top-2 duration-200">
-                <button
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                    setShowImageActionMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-orange-50 transition-colors flex items-center gap-2 text-gray-700"
-                >
-                  <ImageIcon size={16} />
-                  {t('upload_image')}
-                </button>
-                <div className="h-px bg-gray-100"></div>
-                <button
-                  onClick={() => {
-                    setShowImageUrlInput(true);
-                    setShowImageActionMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors flex items-center gap-2 text-gray-700"
-                >
-                  <Globe size={16} />
-                  {t('image_url')}
-                </button>
-              </div>
-            </div>
-          </>
-        );
-      })()}
-
-      {/* --- Image Lightbox --- */}
-      {/* --- Image View Modal --- */}
-      {zoomedImage && (
-        <ImagePreviewModal 
-          zoomedImage={zoomedImage}
-          template={INITIAL_TEMPLATES_CONFIG.find(t => t.imageUrl === zoomedImage || t.imageUrls?.includes(zoomedImage)) || 
-                   templates.find(t => t.imageUrl === zoomedImage || t.imageUrls?.includes(zoomedImage)) ||
-                   (activeTemplate.imageUrl === zoomedImage || activeTemplate.imageUrls?.includes(zoomedImage) ? activeTemplate : null)}
-          language={language}
-          setLanguage={setLanguage}
-          t={t}
-          TAG_STYLES={TAG_STYLES}
-          displayTag={displayTag}
-          setActiveTemplateId={setActiveTemplateId}
-          setDiscoveryView={setDiscoveryView}
-          setZoomedImage={setZoomedImage}
+      {/* 移动端底部导航栏 */}
+      {isMobileDevice && (
+        <MobileBottomNav
+          mobileTab={mobileTab}
           setMobileTab={setMobileTab}
-          handleRefreshSystemData={handleRefreshSystemData}
-          setIsSettingsOpen={setIsSettingsOpen}
+          setDiscoveryView={handleSetDiscoveryView}
+          setZoomedImage={setZoomedImage}
+          setIsTemplatesDrawerOpen={setIsTemplatesDrawerOpen}
+          setIsBanksDrawerOpen={setIsBanksDrawerOpen}
           isDarkMode={isDarkMode}
+          themeMode={themeMode}
+          setThemeMode={setThemeMode}
+          templates={templates}
+          activeTemplateId={activeTemplateId}
+          setActiveTemplateId={setActiveTemplateId}
         />
       )}
-
-      {/* --- Mobile Bottom Navigation - 4 Tabs --- */}
-      <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]/25 border-white/5' : 'bg-white/25 border-white/30'}`}>
-          {/* 主页 */}
-          <button 
-             onClick={() => {
-               setMobileTab('home');
-               setDiscoveryView(true);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'home' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'home' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/home.svg)',
-                    maskImage: 'url(/home.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
-          
-          {/* 模版详情 (编辑器) */}
-          <button 
-             onClick={() => {
-               setDiscoveryView(false);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
-               // 强制确保有模板被选中
-               if (templates.length > 0 && !activeTemplateId) {
-                 const firstId = templates[0].id;
-                 setActiveTemplateId(firstId);
-               }
-               setMobileTab('editor');
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'editor' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'editor' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/list.svg)',
-                    maskImage: 'url(/list.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
-          
-          {/* 设置 */}
-          <button 
-             onClick={() => {
-               setMobileTab('settings');
-               setDiscoveryView(false);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'settings' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'settings' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/setting.svg)',
-                    maskImage: 'url(/setting.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
-
-          {/* 暗色模式切换 (循环：Light -> Dark -> System) */}
-          <button 
-             onClick={() => {
-               if (themeMode === 'light') setThemeMode('dark');
-               else if (themeMode === 'dark') setThemeMode('system');
-               else setThemeMode('light');
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group relative"
-             title={themeMode === 'system' ? 'Follow System' : (themeMode === 'dark' ? 'Dark Mode' : 'Light Mode')}
-          >
-             <div className="p-2 rounded-xl transition-all">
-                <div className={`${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} transition-colors`}>
-                   {themeMode === 'system' ? (
-                     <div className="relative">
-                       <Sun size={24} className="opacity-50" />
-                       <Moon size={14} className="absolute -bottom-1 -right-1" />
-                     </div>
-                   ) : (themeMode === 'dark' ? <Moon size={24} /> : <Sun size={24} />)}
-                </div>
-             </div>
-             {themeMode === 'system' && (
-               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-             )}
-          </button>
-      </div>
-
-      {/* --- Category Manager Modal (Moved to bottom) --- */}
-      <CategoryManager 
-        isOpen={isCategoryManagerOpen} 
-        onClose={() => setIsCategoryManagerOpen(false)}
-        categories={categories}
-        setCategories={setCategories}
-        banks={banks}
-        setBanks={setBanks}
-        t={t}
-        isDarkMode={isDarkMode}
+      <Analytics />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleUploadImage} 
+        className="hidden" 
+        accept="image/*" 
       />
-
-      {/* --- Insert Variable Modal (Moved to bottom) --- */}
-      <InsertVariableModal
-        isOpen={isInsertModalOpen}
-        onClose={() => setIsInsertModalOpen(false)}
-        categories={categories}
-        banks={banks}
-        onSelect={(key) => {
-            insertVariableToTemplate(key);
-            setIsInsertModalOpen(false);
-        }}
-        t={t}
-        isDarkMode={isDarkMode}
-      />
-
-      {/* --- 数据更新提示 (模板和词库) --- */}
-      {showDataUpdateNotice && (
-        <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transition-all">
-            <div className="flex items-center gap-3 mb-4 text-orange-600">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <RefreshCw size={24} />
-              </div>
-              <h3 className="text-xl font-bold">{t('update_available_title')}</h3>
-            </div>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              {t('update_available_msg')}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
-                  setShowDataUpdateNotice(false);
-                }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-              >
-                {t('later')}
-              </button>
-              <button
-                onClick={handleAutoUpdate}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 font-bold"
-              >
-                {t('update_now')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- 应用刷新提示 (应用版本更新) --- */}
-      {showAppUpdateNotice && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:bottom-8 z-[150]">
-          <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-md ml-auto border border-blue-400">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <Sparkles size={24} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium leading-snug">
-                {updateNoticeType === 'app' ? t('app_update_available_msg') : t('data_update_available_msg')}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="px-4 py-2 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg shadow-black/10 whitespace-nowrap"
-            >
-              {t('refresh_now')}
-            </button>
-            <button 
-              onClick={() => setShowAppUpdateNotice(false)}
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

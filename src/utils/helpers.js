@@ -51,19 +51,59 @@ export const copyToClipboard = async (text) => {
 };
 
 // 压缩模板数据
-export const compressTemplate = (data) => {
+export const compressTemplate = (data, banks = null, categories = null) => {
   try {
     if (!data) return null;
 
     // 1. 提取核心数据，过滤掉巨大的 Base64 图像
-    const simplifiedData = (data.n && data.c) ? data : {
+    const simplifiedData = (data.n && data.c) ? {
+      ...data,
+      s: data.s || data.selections || {} // 确保 selections 被包含 (s 为精简键名)
+    } : {
       n: data.name || "",
       c: data.content || "",
       t: data.tags || [],
       a: data.author || 'User',
       l: data.language || ['cn', 'en'],
-      i: (typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : ""
+      i: (typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : "",
+      s: data.selections || {} // s for selections
     };
+
+    // 2. 如果提供了 banks，提取模板中使用的自定义词库
+    if (banks) {
+      const contentStr = typeof simplifiedData.c === 'object' 
+        ? Object.values(simplifiedData.c).join(' ') 
+        : simplifiedData.c;
+      
+      const varRegex = /{{(.*?)}}/g;
+      const matches = [...contentStr.matchAll(varRegex)];
+      
+      // 使用更精确的解析逻辑提取 baseKey，支持带下划线的词库名
+      const baseKeys = [...new Set(matches.map(m => {
+        const fullKey = m[1].trim();
+        // 匹配逻辑：提取末尾如果是 _数字 的部分之前的全部内容
+        const match = fullKey.match(/^(.+?)(?:_(\d+))?$/);
+        return match ? match[1] : fullKey;
+      }))];
+      
+      const relevantBanks = {};
+      const relevantCategories = {};
+      
+      baseKeys.forEach(key => {
+        if (banks[key]) {
+          relevantBanks[key] = banks[key];
+          const catId = banks[key].category;
+          if (categories && categories[catId]) {
+            relevantCategories[catId] = categories[catId];
+          }
+        }
+      });
+      
+      if (Object.keys(relevantBanks).length > 0) {
+        simplifiedData.b = relevantBanks; // b for banks
+        simplifiedData.cg = relevantCategories; // cg for categories
+      }
+    }
 
     const jsonStr = JSON.stringify(simplifiedData);
     const uint8Array = new TextEncoder().encode(jsonStr);
@@ -123,7 +163,9 @@ export const decompressTemplate = (compressedBase64) => {
       author: data.a || 'User',
       language: data.l || ['cn', 'en'],
       imageUrl: data.i || "",
-      selections: {}
+      banks: data.b || null,
+      categories: data.cg || null,
+      selections: data.s || data.selections || {}
     };
   } catch (error) {
     console.error('Decompression error:', error);

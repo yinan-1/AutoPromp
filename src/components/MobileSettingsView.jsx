@@ -23,6 +23,17 @@ export const MobileSettingsView = ({
   // 完善后的更新日志 (同步桌面端内容)
   const updateLogs = language === 'cn' ? [
     { 
+      version: 'V0.7.0', 
+      date: '2026-01-03', 
+      title: '导出增强与统计集成',
+      content: [
+        '新增 Vercel Analytics 数据统计集成',
+        '导出长图支持动态短链接二维码，长链接自动降级',
+        '图片预览弹窗全面适配暗色模式',
+        '引入图片预缓存与代理，解决导出图片空白问题'
+      ]
+    },
+    { 
       version: 'V0.6.5', 
       date: '2025-12-31', 
       title: '数据版本升级与性能优化',
@@ -72,6 +83,17 @@ export const MobileSettingsView = ({
       ]
     }
   ] : [
+    { 
+      version: 'V0.7.0', 
+      date: '2026-01-03', 
+      title: 'Export & Analytics Upgrade',
+      content: [
+        'Integrated Vercel Analytics tracking',
+        'Dynamic short-link QR codes for image export',
+        'Image preview modal now supports Dark Mode',
+        'Fixed image export blanks via pre-caching & proxy'
+      ]
+    },
     { 
       version: 'V0.6.5', 
       date: '2025-12-31', 
@@ -381,7 +403,7 @@ export const MobileSettingsView = ({
       )}
 
       <div className={`text-center pb-8 ${isDarkMode ? 'opacity-10' : 'opacity-20'}`}>
-        <p className={`text-[10px] font-black tracking-[0.3em] uppercase ${isDarkMode ? 'text-white' : 'text-black'}`}>Prompt Fill V0.6.5</p>
+        <p className={`text-[10px] font-black tracking-[0.3em] uppercase ${isDarkMode ? 'text-white' : 'text-black'}`}>Prompt Fill V0.7.0</p>
         <p className={`text-[9px] font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-black'}`}>Made by CornerStudio</p>
       </div>
     </div>

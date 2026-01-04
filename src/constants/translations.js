@@ -133,6 +133,7 @@ export const TRANSLATIONS = {
     import_now: "立即导入",
     import: "导入",
     shared_by: "分享自",
+    manage: "管理",
   },
   en: {
     template_management: "Templates",
@@ -267,5 +268,6 @@ export const TRANSLATIONS = {
     import_now: "Import Now",
     import: "Import",
     shared_by: "Shared by",
+    manage: "Manage",
   },
 };

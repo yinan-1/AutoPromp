@@ -6,6 +6,7 @@ import { getLocalized } from '../utils/helpers';
 import { Sidebar } from './Sidebar';
 import { FireworkEffect } from './FireworkEffect';
 import { FEATURE_FLAGS } from '../constants/featureFlags';
+import { TAG_LABELS } from '../constants/styles';
 
 /**
  * DiscoveryView 组件 - 瀑布流展示所有模板
@@ -37,7 +38,13 @@ export const DiscoveryView = React.memo(({
     globalContainerStyle,
     masonryStyleKey,
     themeMode,
-    setThemeMode
+    setThemeMode,
+    templates,
+    selectedTags,
+    setSelectedTags,
+    selectedLibrary,
+    setSelectedLibrary,
+    TEMPLATE_TAGS
   }) => {
     const [columnCount, setColumnCount] = useState(1);
     const [columnGap, setColumnGap] = useState(20); // Default to gap-5 (20px)
@@ -76,9 +83,8 @@ export const DiscoveryView = React.memo(({
   if (isMobile) {
     // ... 保持移动端逻辑不变
     return (
-      <div 
-        className={`fixed inset-0 z-10 flex flex-col overflow-y-auto pb-32 md:pb-20 ${isDarkMode ? '' : 'mesh-gradient-bg'}`}
-        style={isDarkMode ? { background: 'linear-gradient(180deg, #323131 0%, #181716 100%)' } : {}}
+      <div
+        className={`fixed inset-0 z-10 flex flex-col overflow-y-auto pb-32 md:pb-20 ${isDarkMode ? 'dark-gradient-bg' : 'mesh-gradient-bg'}`}
       >
         <div className="flex flex-col w-full min-h-full px-5 py-8 gap-6">
           {/* 1. 顶部 SVG 标题区域 */}
@@ -101,7 +107,12 @@ export const DiscoveryView = React.memo(({
               <div 
                 key={t_item.id}
                 onClick={() => {
-                  setZoomedImage(t_item.imageUrl);
+                  if (t_item.imageUrl) {
+                    setZoomedImage(t_item.imageUrl);
+                  } else {
+                    setActiveTemplateId(t_item.id);
+                    setDiscoveryView(false);
+                  }
                 }}
                 className={`break-inside-avoid mb-1 w-full rounded-lg overflow-hidden shadow-sm border active:scale-[0.98] transition-all ${isDarkMode ? 'bg-[#2A2726] border-white/5' : 'bg-white border-gray-100'}`}
               >
@@ -134,17 +145,98 @@ export const DiscoveryView = React.memo(({
 
   return (
     <div 
-      className="flex-1 flex items-center justify-center overflow-hidden"
+      className="flex-1 flex items-stretch gap-4 overflow-hidden"
     >
+      {/* Middle Side: Categories Sidebar (Desktop Only) - 注释掉，之后版本启用 */}
+      {/* {!isMobile && (
+        <div 
+          style={{
+            width: '160px',
+            height: '100%',
+            borderRadius: '24px',
+            border: '1px solid transparent',
+            backgroundImage: isDarkMode 
+              ? 'linear-gradient(180deg, #3B3B3B 0%, #242120 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%)'
+              : 'linear-gradient(180deg, #FAF5F1 0%, #F6EBE6 100%), linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'padding-box, border-box',
+          }}
+                  className="hidden lg:flex flex-col flex-shrink-0 pt-12 pb-8 px-4 gap-8 overflow-y-auto categories-scrollbar"
+        >
+          <div className="flex flex-col gap-4">
+            <h3 className={`text-[11px] font-black uppercase tracking-[0.2em] px-4 opacity-50 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {language === 'cn' ? '库源' : 'Library'}
+            </h3>
+            <div className="flex flex-col gap-1.5">
+              {[
+                { id: 'all', cn: '全部', en: 'All' },
+                { id: 'official', cn: '官方库', en: 'Official' },
+                { id: 'personal', cn: '个人库', en: 'Personal' }
+              ].map(lib => (
+                <button
+                  key={lib.id}
+                  onClick={() => setSelectedLibrary(lib.id)}
+                  className={`w-full text-left px-4 py-3 rounded-2xl transition-all duration-300 group ${
+                    selectedLibrary === lib.id 
+                      ? (isDarkMode ? 'bg-[#F97316] text-white shadow-[0_8px_20px_rgba(249,115,22,0.25)]' : 'bg-[#EA580C] text-white shadow-[0_8px_20px_rgba(234,88,12,0.2)]')
+                      : (isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50')
+                  }`}
+                >
+                  <span className={`text-sm font-bold ${selectedLibrary === lib.id ? 'translate-x-1' : 'group-hover:translate-x-1'} transition-transform inline-block`}>
+                    {language === 'cn' ? lib.cn : lib.en}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <h3 className={`text-[11px] font-black uppercase tracking-[0.2em] px-4 opacity-50 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {language === 'cn' ? '分类' : 'Categories'}
+            </h3>
+            <div className="flex flex-col gap-1.5">
+                      <button
+                        onClick={() => setSelectedTags("")}
+                        className={`w-full text-left px-4 py-3 rounded-2xl transition-all duration-300 group ${
+                          selectedTags === "" 
+                            ? (isDarkMode ? 'bg-[#F97316] text-white shadow-[0_8px_20px_rgba(249,115,22,0.25)]' : 'bg-[#EA580C] text-white shadow-[0_8px_20px_rgba(234,88,12,0.2)]')
+                            : (isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50')
+                        }`}
+                      >
+                        <span className={`text-sm font-bold ${selectedTags === "" ? 'translate-x-1' : 'group-hover:translate-x-1'} transition-transform inline-block`}>
+                          {language === 'cn' ? '全部' : 'All'}
+                        </span>
+                      </button>
+                      
+                      {TEMPLATE_TAGS.map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => setSelectedTags(tag)}
+                          className={`w-full text-left px-4 py-3 rounded-2xl transition-all duration-300 group ${
+                            selectedTags === tag 
+                              ? (isDarkMode ? 'bg-[#F97316] text-white shadow-[0_8px_20px_rgba(249,115,22,0.25)]' : 'bg-[#EA580C] text-white shadow-[0_8px_20px_rgba(234,88,12,0.2)]')
+                              : (isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50')
+                          }`}
+                        >
+                          <span className={`text-sm font-bold ${selectedTags === tag ? 'translate-x-1' : 'group-hover:translate-x-1'} transition-transform inline-block`}>
+                            {language === 'cn' ? (TAG_LABELS.cn[tag] || tag) : (TAG_LABELS.en[tag] || tag)}
+                          </span>
+                        </button>
+                      ))}
+            </div>
+          </div>
+        </div>
+      )} */}
+
       {/* Poster Content Container */}
       <div 
         style={globalContainerStyle}
-        className="flex flex-col w-full h-full overflow-hidden relative z-10 p-4 md:p-5 lg:p-7"
+        className="flex-1 flex flex-col overflow-hidden relative z-10 p-4 md:p-5 lg:pt-12 lg:pb-7 lg:px-7"
       >
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-12 xl:gap-16 overflow-hidden py-4 lg:py-8 px-2 lg:px-6">
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 xl:gap-12 overflow-hidden pb-4 lg:pb-8 pt-0 px-2 lg:px-6">
               {/* Left Side: Logo & Slogan */}
-              <div className="flex flex-col justify-center items-center lg:items-start lg:w-[280px] xl:w-[320px] flex-shrink-0 px-4 lg:pl-6 lg:pr-2 gap-6">
-                  <div className="w-full max-w-[320px] scale-75 sm:scale-85 lg:scale-90 xl:scale-100 origin-center lg:origin-left">
+              <div className="flex flex-col justify-center items-center lg:w-[280px] xl:w-[320px] flex-shrink-0 px-4 lg:pl-6 lg:pr-2 gap-6">
+                  <div className="w-full max-w-[320px] scale-75 sm:scale-85 lg:scale-90 xl:scale-100 origin-center">
                       <img 
                           src={isDarkMode ? "/Title_Dark.svg" : "/Title.svg"} 
                           alt="Prompt Fill Logo" 
@@ -173,7 +265,12 @@ export const DiscoveryView = React.memo(({
                                           <div 
                                               key={t_item.id}
                                               onClick={() => {
-                                                  setZoomedImage(t_item.imageUrl);
+                                                  if (t_item.imageUrl) {
+                                                      setZoomedImage(t_item.imageUrl);
+                                                  } else {
+                                                      setActiveTemplateId(t_item.id);
+                                                      setDiscoveryView(false);
+                                                  }
                                               }}
                                               className={`cursor-pointer group transition-shadow duration-300 relative overflow-hidden rounded-xl isolate border-2 hover:shadow-[0_0_25px_rgba(251,146,60,0.6)] will-change-transform ${isDarkMode ? 'border-white/10' : 'border-white'}`}
                                           >

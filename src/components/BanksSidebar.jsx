@@ -630,7 +630,7 @@ export const BanksSidebar = React.memo(({
             ${!isMobile && mobileTab !== 'editor' && mobileTab !== 'banks' ? 'hidden md:flex' : ''}
         `}
       >
-        <div className={`flex flex-col w-full h-full backdrop-blur-sm rounded-2xl ${isMobile ? (isDarkMode ? 'bg-[#242120]/95' : 'bg-white/95') : (isDarkMode ? 'bg-black/20' : 'bg-white/30')}`}>
+        <div className={`flex flex-col w-full h-full backdrop-blur-sm md:rounded-2xl ${isMobile ? (isDarkMode ? 'bg-[#242120]/95' : 'bg-white/95') : (isDarkMode ? 'bg-black/20' : 'bg-white/30')}`}>
           <div 
               className="hidden md:flex absolute -left-2 top-0 bottom-0 w-4 cursor-col-resize z-40 group items-center justify-center"
               onMouseDown={startResizing}
@@ -643,16 +643,15 @@ export const BanksSidebar = React.memo(({
           <div className="flex flex-col items-start gap-1">
               <h1 className="font-black tracking-tight text-[22px] text-orange-500 flex items-baseline gap-2">
                   {t('bank_config')}
-                  <span className={`text-xs font-bold tracking-widest uppercase ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>Library</span>
               </h1>
           </div>
           <PremiumButton 
               onClick={() => setIsCategoryManagerOpen(true)}
-              title={t('manage_categories')}
+              title={t('manage')}
               icon={Settings}
               isDarkMode={isDarkMode}
           >
-              {t('manage_categories')}
+              {t('manage')}
           </PremiumButton>
         </div>
         <div className="flex flex-col gap-4">
