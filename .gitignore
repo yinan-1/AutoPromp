@@ -45,3 +45,8 @@ App-clean.jsx
 
 # Tauri (Desktop App)
 src-tauri/
+
+# Project Management & Internal Notes
+skills.md
+release_checklist.md
+CLAUDE.md
