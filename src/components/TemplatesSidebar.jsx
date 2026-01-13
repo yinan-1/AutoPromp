@@ -10,20 +10,16 @@ import { getLocalized } from '../utils/helpers';
 /**
  * TemplatesSidebar 组件 - 负责展示左侧模版列表
  */
-export const TemplatesSidebar = React.memo(({ 
-  mobileTab, 
+export const TemplatesSidebar = React.memo(({
+  mobileTab,
   isTemplatesDrawerOpen,
   setIsTemplatesDrawerOpen,
   setDiscoveryView,
   activeTemplateId,
-  setActiveTemplateId, 
+  setActiveTemplateId,
   filteredTemplates,
   searchQuery,
   setSearchQuery,
-  selectedTags,
-  setSelectedTags,
-  TEMPLATE_TAGS,
-  displayTag,
   handleRefreshSystemData,
   language,
   setLanguage,
@@ -112,40 +108,13 @@ export const TemplatesSidebar = React.memo(({
             {/* 极简搜索框 */}
             <div className={`premium-search-container group ${isDarkMode ? 'dark' : 'light'}`}>
                 <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none z-10 ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400 group-focus-within:text-orange-500'}`} size={16} />
-                <input 
-                  type="text" 
-                  placeholder={t('search_templates')} 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  className={`premium-search-input ${isDarkMode ? 'dark' : 'light'}`} 
+                <input
+                  type="text"
+                  placeholder={t('search_templates')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`premium-search-input ${isDarkMode ? 'dark' : 'light'}`}
                 />
-            </div>
-            
-            {/* 极简标签选择 */}
-            <div className="flex flex-wrap items-center gap-1.5 pb-1 px-1">
-                <button 
-                  onClick={() => setSelectedTags("")} 
-                  className={`px-3 py-1 rounded-xl tracking-widest capitalize transition-all ${
-                    language === 'cn' 
-                      ? 'text-[11px] font-black' 
-                      : 'text-[8px] font-medium'
-                  } ${selectedTags === "" ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}`}
-                >
-                  {t('all_templates')}
-                </button>
-                {TEMPLATE_TAGS.map(tag => (
-                  <button 
-                    key={tag} 
-                    onClick={() => setSelectedTags(selectedTags === tag ? "" : tag)} 
-                    className={`px-3 py-1 rounded-xl tracking-widest capitalize transition-all ${
-                      language === 'cn' 
-                        ? 'text-[11px] font-black' 
-                        : 'text-[8px] font-medium'
-                    } ${selectedTags === tag ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}`}
-                  >
-                    {displayTag(tag)}
-                  </button>
-                ))}
             </div>
          </div>
       </div>

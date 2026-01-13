@@ -37,6 +37,16 @@ export const MobileSettingsView = ({
   // 完善后的更新日志 (同步桌面端内容)
   const updateLogs = language === 'cn' ? [
     { 
+      version: 'V0.7.2', 
+      date: '2026-01-13', 
+      title: '系统架构优化与数据更新',
+      content: [
+        '全站版本号同步升级至 V0.7.2',
+        '数据版本升级至 V0.8.4，扩充词库模版',
+        '优化系统运行效率与核心交互性能'
+      ]
+    },
+    { 
       version: 'V0.7.1', 
       date: '2026-01-07', 
       title: '存储架构升级与系统维护',
@@ -107,6 +117,16 @@ export const MobileSettingsView = ({
       ]
     }
   ] : [
+    { 
+      version: 'V0.7.2', 
+      date: '2026-01-13', 
+      title: 'System Optimization & Data Update',
+      content: [
+        'Bumped system version to V0.7.2',
+        'Data version upgraded to V0.8.4',
+        'Optimized system performance and efficiency'
+      ]
+    },
     { 
       version: 'V0.7.1', 
       date: '2026-01-07', 
@@ -461,7 +481,7 @@ export const MobileSettingsView = ({
       )}
 
       <div className={`text-center pb-8 ${isDarkMode ? 'opacity-10' : 'opacity-20'}`}>
-        <p className={`text-[10px] font-black tracking-[0.3em] uppercase ${isDarkMode ? 'text-white' : 'text-black'}`}>Prompt Fill V0.7.1</p>
+        <p className={`text-[10px] font-black tracking-[0.3em] uppercase ${isDarkMode ? 'text-white' : 'text-black'}`}>Prompt Fill V0.7.2</p>
         <p className={`text-[9px] font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-black'}`}>Made by CornerStudio</p>
       </div>
     </div>

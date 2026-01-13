@@ -3,6 +3,7 @@ import { Variable } from './Variable';
 import { VisualEditor } from './VisualEditor';
 import { EditorToolbar } from './EditorToolbar';
 import { ImageIcon, ArrowUpRight, Upload, Globe, RotateCcw, Pencil, Check, X, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { WaypointsIcon } from './icons/WaypointsIcon';
 import { getLocalized } from '../utils/helpers';
 
 /**
@@ -61,10 +62,12 @@ export const TemplatePreview = React.memo(({
   updateActiveTemplateContent,
   textareaRef,
   templateLanguage,
+  handleShareLink, // 新增：分享处理函数
   // AI 相关（预留接口）
   onGenerateAITerms = null,  // AI 生成词条的回调函数
 }) => {
   const [editImageIndex, setEditImageIndex] = React.useState(0);
+  const previewShareIconRef = React.useRef(null);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   // 统一的底层容器样式
@@ -92,6 +95,15 @@ export const TemplatePreview = React.memo(({
   }, [activeTemplate.imageUrls, activeTemplate.imageUrl]);
 
   const currentImageUrl = allImages[editImageIndex] || activeTemplate?.imageUrl;
+
+  // 当多图数组长度增加时（即添加了新图），自动切换到最后一张
+  const lastImageCount = React.useRef(allImages.length);
+  React.useEffect(() => {
+    if (allImages.length > lastImageCount.current) {
+      setEditImageIndex(allImages.length - 1);
+    }
+    lastImageCount.current = allImages.length;
+  }, [allImages.length]);
 
   // 当模板切换或图片索引切换时，同步编辑索引给父组件
   React.useEffect(() => {
@@ -363,6 +375,18 @@ export const TemplatePreview = React.memo(({
                                 >
                                     <Pencil size={18} />
                                 </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleShareLink && handleShareLink();
+                                    }}
+                                    onMouseEnter={() => previewShareIconRef.current?.startAnimation()}
+                                    onMouseLeave={() => previewShareIconRef.current?.stopAnimation()}
+                                    className="p-2 rounded-xl transition-all duration-200 opacity-0 group-hover/title-edit:opacity-100 dark:text-gray-600 dark:hover:text-orange-400 dark:hover:bg-white/5 text-gray-300 hover:text-orange-500 hover:bg-orange-50"
+                                    title={language === 'cn' ? '分享模版' : t('share_link')}
+                                >
+                                    <WaypointsIcon ref={previewShareIconRef} size={18} />
+                                </button>
                             </div>
                         )}
 
@@ -449,13 +473,15 @@ export const TemplatePreview = React.memo(({
                                                     : [...currentTags, tag];
                                                 setEditingTemplateTags({ id: activeTemplate.id, tags: newTags });
                                             }}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                                            className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-300 group ${
                                                 (editingTemplateTags.tags || []).includes(tag)
-                                                    ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-200 scale-105'
-                                                    : (isDarkMode ? 'bg-white/5 text-gray-500 border-white/5 hover:border-orange-500/50 hover:text-orange-400' : 'bg-white text-gray-500 border-gray-100 hover:border-orange-200 hover:text-orange-500')
+                                                    ? (isDarkMode ? 'bg-[#F48B42]/10 text-[#FB923C]' : 'bg-[#F9BC8F]/20 text-[#EA580C]')
+                                                    : (isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50')
                                             }`}
                                         >
-                                            {displayTag(tag)}
+                                            <span className={`inline-block ${ (editingTemplateTags.tags || []).includes(tag) ? 'translate-x-1' : 'group-hover:translate-x-1'} transition-transform`}>
+                                                {displayTag(tag)}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>

@@ -9,6 +9,7 @@ import { SettingsIcon } from './icons/SettingsIcon';
 import { SunDimIcon } from './icons/SunDimIcon';
 import { SunMoonIcon } from './icons/SunMoonIcon';
 import { MoonIcon } from './icons/MoonIcon';
+import { Tooltip } from './Tooltip';
 
 /**
  * Sidebar 组件 - 通用侧边导航栏
@@ -70,30 +71,33 @@ export const Sidebar = ({
 
         {/* 导航按钮组 */}
         <div className="flex flex-col items-center gap-6">
-          <button 
-            onClick={onHome}
-            className={`p-2 group transition-colors ${activeTab === 'home' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
-            title="主页"
-          >
-            <HomeIcon size={24} />
-          </button>
+          <Tooltip content="主页" isDarkMode={isDarkMode}>
+            <button 
+              onClick={onHome}
+              className={`p-2 group transition-colors ${activeTab === 'home' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
+            >
+              <HomeIcon size={24} />
+            </button>
+          </Tooltip>
           
-          <button 
-            onClick={onDetail}
-            className={`p-2 group transition-colors ${activeTab === 'details' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
-            title="详情页"
-          >
-            <ListIcon size={24} />
-          </button>
+          <Tooltip content="详情页" isDarkMode={isDarkMode}>
+            <button 
+              onClick={onDetail}
+              className={`p-2 group transition-colors ${activeTab === 'details' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
+            >
+              <ListIcon size={24} />
+            </button>
+          </Tooltip>
           
           <div className="relative">
-            <button 
-              onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-              className={`p-2 group transition-colors ${isSortMenuOpen ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
-              title={t('sort')}
-            >
-              <OrderIcon size={24} />
-            </button>
+            <Tooltip content={t('sort')} isDarkMode={isDarkMode}>
+              <button 
+                onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                className={`p-2 group transition-colors ${isSortMenuOpen ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
+              >
+                <OrderIcon size={24} />
+              </button>
+            </Tooltip>
             
             {isSortMenuOpen && (
               <div className={`absolute left-full ml-4 bottom-0 backdrop-blur-xl rounded-2xl shadow-2xl border py-2 min-w-[160px] z-[110] animate-in slide-in-from-left-2 duration-200 ${isDarkMode ? 'bg-black/80 border-white/10' : 'bg-white/95 border-white/60'}`}>
@@ -120,61 +124,66 @@ export const Sidebar = ({
             )}
           </div>
 
-          <button 
-            onClick={onRefresh}
-            className={`p-2 group transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
-            title={t('refresh_desc')}
-          >
-            <RefreshIcon size={24} />
-          </button>
+          <Tooltip content={t('refresh_desc')} isDarkMode={isDarkMode}>
+            <button 
+              onClick={onRefresh}
+              className={`p-2 group transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
+            >
+              <RefreshIcon size={24} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
       {/* 下部分：设置组 */}
       <div className="flex flex-col items-center gap-6 w-full">
-        <button 
-          onClick={() => setLanguage(language === 'cn' ? 'en' : 'cn')}
-          className={`p-2 group transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
-          title={t('language')}
-        >
-          <TranslateIcon size={24} />
-        </button>
+        <Tooltip content={t('language')} isDarkMode={isDarkMode}>
+          <button 
+            onClick={() => setLanguage(language === 'cn' ? 'en' : 'cn')}
+            className={`p-2 group transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
+          >
+            <TranslateIcon size={24} />
+          </button>
+        </Tooltip>
 
-        <button 
-          onClick={() => {
-            if (themeMode === 'light') setThemeMode('dark');
-            else if (themeMode === 'dark') setThemeMode('system');
-            else setThemeMode('light');
-          }}
-          className={`p-2 group relative transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
-          title={themeMode === 'system' ? 'Follow System' : (themeMode === 'dark' ? 'Dark Mode' : 'Light Mode')}
-        >
-          {themeMode === 'system' ? (
-            <SunMoonIcon size={24} />
-          ) : (themeMode === 'dark' ? <MoonIcon size={24} /> : <SunDimIcon size={24} />)}
-          
-          {themeMode === 'system' && (
-            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-          )}
-        </button>
+        <Tooltip content={themeMode === 'system' ? 'Follow System' : (themeMode === 'dark' ? 'Dark Mode' : 'Light Mode')} isDarkMode={isDarkMode}>
+          <button 
+            onClick={() => {
+              if (themeMode === 'light') setThemeMode('dark');
+              else if (themeMode === 'dark') setThemeMode('system');
+              else setThemeMode('light');
+            }}
+            className={`p-2 group relative transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
+          >
+            {themeMode === 'system' ? (
+              <SunMoonIcon size={24} />
+            ) : (themeMode === 'dark' ? <MoonIcon size={24} /> : <SunDimIcon size={24} />)}
+            
+            {themeMode === 'system' && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+            )}
+          </button>
+        </Tooltip>
         
-        <button 
-          onClick={onSettings}
-          className={`p-2 group transition-colors ${activeTab === 'settings' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
-          title={t('settings')}
-        >
-          <SettingsIcon size={24} />
-        </button>
+        <Tooltip content={t('settings')} isDarkMode={isDarkMode}>
+          <button 
+            onClick={onSettings}
+            className={`p-2 group transition-colors ${activeTab === 'settings' ? (isDarkMode ? 'text-[#FB923C]' : 'text-[#EA580C]') : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} hover:text-[#F97316]`}
+          >
+            <SettingsIcon size={24} />
+          </button>
+        </Tooltip>
         
-        <a 
-          href="https://github.com/TanShilongMario/PromptFill/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className={`p-2 transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
-          title="Github"
-        >
-          <GithubIcon size={24} />
-        </a>
+        <Tooltip content="Github" isDarkMode={isDarkMode}>
+          <a 
+            href="https://github.com/TanShilongMario/PromptFill/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={`p-2 transition-colors ${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} hover:text-[#F97316]`}
+          >
+            <GithubIcon size={24} />
+          </a>
+        </Tooltip>
       </div>
     </aside>
   );

@@ -36,6 +36,18 @@ export const SettingsView = ({
   
   const updateLogs = language === 'cn' ? [
     { 
+      version: 'V0.7.2', 
+      date: '2026年1月13日', 
+      time: '11:00 AM',
+      title: '系统架构优化与数据版本更新',
+      type: 'MAJOR',
+      content: [
+        '🚀 系统升级：全站同步升级至 V0.7.2，优化核心交互性能与系统运行效率。',
+        '📊 数据更新：数据版本升级至 V0.8.4，包含最新的预置词库扩充与模版优化。',
+        '📝 文档同步：全面更新项目 Readme 与发版维护指南，确保“一处修改，全端同步”。'
+      ]
+    },
+    { 
       version: 'V0.7.1', 
       date: '2026年1月7日', 
       time: '10:00 AM',
@@ -187,6 +199,18 @@ export const SettingsView = ({
       ]
     }
   ] : [
+    { 
+      version: 'V0.7.2', 
+      date: 'Jan 13, 2026', 
+      time: '11:00 AM',
+      title: 'System Optimization & Data Update',
+      type: 'MAJOR',
+      content: [
+        '🚀 System Upgrade: Synchronized to V0.7.2 with core performance optimizations.',
+        '📊 Data Update: Data version upgraded to V0.8.4 with new bank expansions and template refinements.',
+        '📝 Documentation: Comprehensive updates to README and release checklists for better workflow.'
+      ]
+    },
     { 
       version: 'V0.7.1', 
       date: 'Jan 7, 2026', 
@@ -389,7 +413,7 @@ export const SettingsView = ({
           </h1>
           <div className="flex items-center gap-3 mt-1">
             <span className={`text-[9px] font-black tracking-[0.1em] uppercase ${isDarkMode ? 'text-gray-600' : 'text-gray-500'}`}>
-              System V0.7.1
+              System V0.7.2
             </span>
             <div className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
             <span className="text-[9px] font-black text-orange-500/80 tracking-[0.1em] uppercase">

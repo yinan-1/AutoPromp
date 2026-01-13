@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { Eye, Edit3, Share2, Copy, Check, ImageIcon, Pencil, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Eye, Edit3, Copy, Check, ImageIcon, Pencil, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { WaypointsIcon } from './icons/WaypointsIcon';
 import { getLocalized } from '../utils/helpers';
 import { TemplatePreview } from './TemplatePreview';
 import { VisualEditor } from './VisualEditor';
@@ -229,7 +230,7 @@ export const TemplateEditor = React.memo(({
               <PremiumButton
                 onClick={handleShareLink}
                 title={language === 'cn' ? '分享模版' : t('share_link')}
-                icon={Share2}
+                icon={WaypointsIcon}
                 isDarkMode={isDarkMode}
                 className="flex-none"
               >
@@ -413,6 +414,7 @@ export const TemplateEditor = React.memo(({
                 textareaRef={textareaRef}
                 templateLanguage={templateLanguage}
                 onGenerateAITerms={onGenerateAITerms}  // 传递 AI 生成回调
+                handleShareLink={handleShareLink} // 传递分享回调
               />
             )}
           </div>

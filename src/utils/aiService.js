@@ -7,7 +7,7 @@
 import { AI_FEATURE_ENABLED } from '../constants/aiConfig';
 
 /**
- * 智能生成词条
+ * 智能生成词条（增强版：支持上下文感知）
  * @param {Object} params - 生成参数
  * @param {string} params.variableLabel - 变量标签
  * @param {string} params.language - 语言 (cn/en)
@@ -15,6 +15,7 @@ import { AI_FEATURE_ENABLED } from '../constants/aiConfig';
  * @param {Array} params.localOptions - 本地词库选项
  * @param {string} params.templateContext - 模板上下文内容
  * @param {number} params.count - 生成数量
+ * @param {Object} params.selectedValues - 用户已选择的其他变量值（新增）
  * @returns {Promise<Array>} - AI 生成的词条数组
  */
 export const generateAITerms = async (params) => {
@@ -24,7 +25,8 @@ export const generateAITerms = async (params) => {
     currentValue,
     localOptions = [],
     templateContext = "",
-    count = 5
+    count = 5,
+    selectedValues = {}  // 新增：用户已选择的其他变量值
   } = params;
 
   // 检查功能开关
@@ -50,7 +52,8 @@ export const generateAITerms = async (params) => {
           context: templateContext,
           localOptions: localOptions.slice(0, 15), // 传递部分本地选项供参考
           currentValue,
-          count
+          count,
+          selectedValues  // 新增：传递用户已选择的变量值
         }
       })
     });

@@ -18,7 +18,8 @@ export const INITIAL_BANKS = {
       { cn: "游戏与动漫概念美术设计大师", en: "Master of Game and Anime Concept Art" },
       { cn: "资深影视角色原画师", en: "Senior Film Character Concept Artist" },
       { cn: "赛博朋克风格设计师", en: "Cyberpunk Style Designer" },
-      { cn: "暗黑幻想风格插画师", en: "Dark Fantasy Style Illustrator" }
+      { cn: "暗黑幻想风格插画师", en: "Dark Fantasy Style Illustrator" },
+      { cn: "美术摄影与电影写实风格", en: "Fine-art photography blended with cinematic realism" }
     ]
   },
   subject: {
@@ -29,7 +30,20 @@ export const INITIAL_BANKS = {
       { cn: "男性角色", en: "Male Character" },
       { cn: "机甲少女", en: "Mecha Girl" },
       { cn: "怪物拟人化", en: "Monster Anthropomorphism" },
-      { cn: "奇幻种族(精灵/恶魔)", en: "Fantasy Race (Elf/Demon)" }
+      { cn: "奇幻种族(精灵/恶魔)", en: "Fantasy Race (Elf/Demon)" },
+      { cn: "女性，约20岁", en: "Female, around 20 years old" },
+      { cn: "年轻韩国女团偶像", en: "Young Korean female K-pop idol" }
+    ]
+  },
+  hair_style: {
+    label: { cn: "发型样式", en: "Hair Style" },
+    category: "character",
+    options: [
+      { cn: "短发，柔和凌乱的深色头发", en: "Short, softly tousled dark hair" },
+      { cn: "深色波浪长发", en: "Dark wavy long hair" },
+      { cn: "黑色直发，垂在肩上", en: "Black straight hair, falling over shoulders" },
+      { cn: "浅金色卷发", en: "Light blonde curly hair" },
+      { cn: "高马尾辫", en: "High ponytail" }
     ]
   },
   character_companion: {
@@ -98,7 +112,10 @@ export const INITIAL_BANKS = {
       { cn: "斜角拍摄的原始人像", en: "Raw portrait from an angle" },
       { cn: "双手置于锁骨附近的特写", en: "Close-up with hands near collarbones" },
       { cn: "坐姿半身侧面照", en: "Seated half-body profile shot" },
-      { cn: "侧面微距照", en: "Side macro shot" }
+      { cn: "侧面微距照", en: "Side macro shot" },
+      { cn: "上半身特写", en: "upper-body close-up" },
+      { cn: "平视、略微隐藏的中景镜头", en: "eye-level, slightly hidden intimate medium shot" },
+      { cn: "腰部以上的美术肖像", en: "Waist-up fine-art portrait" }
     ]
   },
   connectors: {
@@ -118,7 +135,8 @@ export const INITIAL_BANKS = {
       { cn: "成套的蕾丝内衣裤", en: "Matching lace lingerie set" },
       { cn: "运动风格纯棉内衣", en: "Athletic style cotton underwear" },
       { cn: "极简主义丝绸内衣", en: "Minimalist silk lingerie" },
-      { cn: "哥特风格绑带内衣", en: "Gothic style strappy lingerie" }
+      { cn: "哥特风格绑带内衣", en: "Gothic style strappy lingerie" },
+      { cn: "“纯欲风”服饰", en: "'pure-seductive' outfit style" }
     ]
   },
   clothing: {
@@ -129,7 +147,19 @@ export const INITIAL_BANKS = {
       { cn: "白色丝绸衬衫", en: "White silk shirt" },
       { cn: "黑色修身西装", en: "Black slim-fit suit" },
       { cn: "战术机能风外套", en: "Tactical techwear jacket" },
-      { cn: "复古碎花连衣裙", en: "Vintage floral print dress" }
+      { cn: "复古碎花连衣裙", en: "Vintage floral print dress" },
+      { cn: "略显成熟的“大姐姐”时尚风格", en: "Slightly mature 'onee-san' fashion style" },
+      { cn: "柔和青色复古碎花连衣裙", en: "Muted teal floral dress with subtle vintage patterns" }
+    ]
+  },
+  accessory_glasses: {
+    label: { cn: "眼镜配饰", en: "Glasses" },
+    category: "item",
+    options: [
+      { cn: "戴着有轻微镜面反射的眼镜", en: "wearing glasses with mild lens reflections" },
+      { cn: "戴着时尚的太阳镜", en: "wearing stylish sunglasses" },
+      { cn: "戴着黑框近视眼镜", en: "wearing black-rimmed glasses" },
+      { cn: "不戴眼镜", en: "no glasses" }
     ]
   },
   clothing_male: {
@@ -153,7 +183,8 @@ export const INITIAL_BANKS = {
       { cn: "机车皮衣与短裙", en: "Biker leather jacket and short skirt" },
       { cn: "白色蕾丝衬衫", en: "White lace blouse" },
       { cn: "黑色紧身连体衣", en: "Black tight bodysuit" },
-      { cn: "优雅的香奈儿风套装", en: "Elegant Chanel-style suit" }
+      { cn: "优雅的香奈儿风套装", en: "Elegant Chanel-style suit" },
+      { cn: "半脱的灰色大号连帽衫，露出白色吊带", en: "half-removed oversized grey hoodie, revealing white camisole" }
     ]
   },
   expressions: {
@@ -450,7 +481,8 @@ export const INITIAL_BANKS = {
       { cn: "1:1", en: "1:1 Square" },
       { cn: "4:3横构图", en: "4:3 Horizontal" },
       { cn: "16:9横构图", en: "16:9 Horizontal" },
-      { cn: "圆形画幅", en: "Circular Aspect Ratio" }
+      { cn: "圆形画幅", en: "Circular Aspect Ratio" },
+      { cn: "2:3竖构图", en: "2:3 Vertical" }
     ]
   },
   // Fashion Template additions
@@ -501,7 +533,10 @@ export const INITIAL_BANKS = {
       { cn: "自然窗光", en: "Natural window light" },
       { cn: "伦勃朗光", en: "Rembrandt lighting" },
       { cn: "赛博朋克霓虹光", en: "Cyberpunk neon lighting" },
-      { cn: "影棚硬光", en: "Studio hard light" }
+      { cn: "影棚硬光", en: "Studio hard light" },
+      { cn: "随意的肖像摄影，带有日常快照氛围", en: "Casual portrait photography with a daily snapshot vibe" },
+      { cn: "隐藏相机拍摄风格，Portra 400 胶片质感", en: "Hidden camera style, Portra 400 film grain aesthetic" },
+      { cn: "阴天下的柔和自然光", en: "Soft natural light under overcast sky" }
     ]
   },
   sticker_core: {
@@ -541,7 +576,10 @@ export const INITIAL_BANKS = {
       { cn: "俯瞰纽约市的复仇者大厦楼顶", en: "Rooftop of Avengers Tower overlooking New York City" },
       { cn: "废弃的工业仓库", en: "Abandoned industrial warehouse" },
       { cn: "熙熙攘攘的时代广场", en: "Bustling Times Square" },
-      { cn: "外太空飞船内部", en: "Inside a space-age spaceship" }
+      { cn: "外太空飞船内部", en: "Inside a space-age spaceship" },
+      { cn: "昏暗、平凡的房间，身后有一面素墙", en: "Dark, ordinary room with a plain wall behind the subject" },
+      { cn: "昏暗舒适的后台更衣室或私密宿舍", en: "dimly lit, cozy backstage dressing room or private dorm room" },
+      { cn: "盛开的郁郁葱葱的花园", en: "Lush garden in full bloom" }
     ]
   },
 
@@ -609,7 +647,10 @@ export const INITIAL_BANKS = {
       { cn: "穿潜水脚蹼", en: "putting on diving fins" },
       { cn: "正在调酒", en: "mixing a cocktail" },
       { cn: "在看一本厚厚的旧书", en: "reading a thick old book" },
-      { cn: "在修剪巨大的室内绿植", en: "trimming a giant indoor plant" }
+      { cn: "在修剪巨大的室内绿植", en: "trimming a giant indoor plant" },
+      { cn: "坐在沙发上，正随意地玩着手机", en: "Sitting on a sofa, casually playing on her phone" },
+      { cn: "换衣时惊讶地抬头直视镜头", en: "frozen in surprise, looking directly into the lens while changing" },
+      { cn: "温柔地凝视着镜头，带着淡淡的忧郁", en: "Looking gently toward the camera, with a touch of melancholy" }
     ]
   },
   draw_style: {
@@ -842,7 +883,8 @@ export const INITIAL_BANKS = {
       { cn: "淡粉色牡丹", en: "Pale pink peonies" },
       { cn: "名贵的深色兰花", en: "Exotic dark orchids" },
       { cn: "干枯的桉树叶", en: "Dried eucalyptus leaves" },
-      { cn: "鲜艳的向日葵", en: "Vibrant sunflowers" }
+      { cn: "鲜艳的向日葵", en: "Vibrant sunflowers" },
+      { cn: "白色和淡桃色花瓣在空中飘落", en: "White and pale peach flower petals drifting through the air" }
     ]
   },
   character_type_pixar: {
@@ -935,6 +977,231 @@ export const INITIAL_BANKS = {
       { cn: "生活：咖啡机、磨豆机、高档手办组件、限量书籍", en: "Life: Coffee machine, grinder, high-end figure parts, limited books" },
       { cn: "运动：网球拍、滑板、滑雪镜、运动相机、水壶", en: "Sports: Tennis racket, skateboard, ski goggles, action cam, bottle" }
     ]
+  },
+  // 新年海报相关词库
+  clothing_style_chinese: {
+    label: { cn: "中式服饰风格", en: "Chinese Clothing Style" },
+    category: "item",
+    options: [
+      { cn: "传统暗红色中式长袍", en: "Traditional dark red Chinese robe" },
+      { cn: "古典红色汉服", en: "Classical red Hanfu" },
+      { cn: "传统金色龙袍", en: "Traditional golden dragon robe" },
+      { cn: "深紫色唐装", en: "Deep purple Tang suit" },
+      { cn: "宝蓝色旗袍", en: "Sapphire blue Qipao" },
+      { cn: "墨绿色传统长衫", en: "Dark green traditional long gown" },
+      { cn: "朱红色将军战袍", en: "Vermilion general's battle robe" },
+      { cn: "紫金色锦缎华服", en: "Purple-gold brocade noble attire" }
+    ]
+  },
+  clothing_color_traditional: {
+    label: { cn: "传统服装颜色", en: "Traditional Clothing Color" },
+    category: "visual",
+    options: [
+      { cn: "暗红色", en: "Dark Red" },
+      { cn: "朱红色", en: "Vermilion" },
+      { cn: "宝蓝色", en: "Sapphire Blue" },
+      { cn: "金黄色", en: "Golden Yellow" },
+      { cn: "紫金色", en: "Purple Gold" },
+      { cn: "墨绿色", en: "Dark Green" },
+      { cn: "深紫色", en: "Deep Purple" },
+      { cn: "玄黑色", en: "Mystic Black" }
+    ]
+  },
+  year_number: {
+    label: { cn: "年份", en: "Year" },
+    category: "other",
+    options: [
+      { cn: "2025", en: "2025" },
+      { cn: "2026", en: "2026" },
+      { cn: "2027", en: "2027" },
+      { cn: "2028", en: "2028" },
+      { cn: "2029", en: "2029" },
+      { cn: "2030", en: "2030" }
+    ]
+  },
+  greeting_new_year: {
+    label: { cn: "新年祝福语", en: "New Year Greeting" },
+    category: "other",
+    options: [
+      { cn: "马到成功", en: "Immediate Success" },
+      { cn: "龙马精神", en: "Vigorous Spirit" },
+      { cn: "马不停蹄", en: "Unremitting Efforts" },
+      { cn: "一马当先", en: "Take the Lead" },
+      { cn: "龙腾虎跃", en: "Dragon Soaring and Tiger Leaping" },
+      { cn: "新年快乐", en: "Happy New Year" },
+      { cn: "万事如意", en: "May All Go Well" },
+      { cn: "恭喜发财", en: "Wishing You Prosperity" }
+    ]
+  },
+  background_color_festive: {
+    label: { cn: "节日背景颜色", en: "Festive Background Color" },
+    category: "visual",
+    options: [
+      { cn: "红色背景", en: "Red background" },
+      { cn: "金色背景", en: "Gold background" },
+      { cn: "红金渐变背景", en: "Red-gold gradient background" },
+      { cn: "深红背景", en: "Deep red background" },
+      { cn: "朱红背景", en: "Vermilion background" },
+      { cn: "暖橙红背景", en: "Warm orange-red background" }
+    ]
+  },
+  character_heroic: {
+    label: { cn: "人物类型", en: "Character Type" },
+    category: "character",
+    options: [
+      { cn: "年轻学生", en: "Young Student" },
+      { cn: "都市白领", en: "Urban Professional" },
+      { cn: "文艺青年", en: "Artistic Youth" },
+      { cn: "普通上班族", en: "Office Worker" },
+      { cn: "威武将军", en: "Mighty General" },
+      { cn: "英勇武者", en: "Brave Warrior" },
+      { cn: "传奇英雄", en: "Legendary Hero" },
+      { cn: "武侠高手", en: "Martial Arts Master" }
+    ]
+  },
+  room_style_cute: {
+    label: { cn: "可爱房间风格", en: "Cute Room Style" },
+    category: "location",
+    options: [
+      { cn: "可爱粉色房间，粉彩床和墙壁，原创动物玩偶，妖精灯光，可爱海报，毛绒地毯", en: "Cute pink room, pastel pink bed and walls, original cute animal plushies, fairy lights, cute posters, fluffy rug" },
+      { cn: "简约白色房间，白色家具，绿植，自然光，木质地板", en: "Minimalist white room, white furniture, plants, natural light, wooden floor" },
+      { cn: "复古粉色房间，复古家具，丝绒窗帘，古典装饰，温暖氛围", en: "Vintage pink room, vintage furniture, velvet curtains, classic decor, warm atmosphere" },
+      { cn: "梦幻紫色房间，紫色床单，星星灯串，梦幻壁纸，柔软地毯", en: "Dreamy purple room, purple sheets, star lights, dreamy wallpaper, soft carpet" },
+      { cn: "清新蓝色房间，蓝色床品，海洋装饰，贝壳元素，清爽感觉", en: "Fresh blue room, blue bedding, ocean decor, shell elements, refreshing feel" },
+      { cn: "温暖橙色房间，橙色家具，阳光充足，活力装饰，舒适地毯", en: "Warm orange room, orange furniture, abundant sunlight, energetic decor, cozy rug" },
+      { cn: "北欧风格房间，灰色床品，简约设计，自然材质，柔和灯光", en: "Nordic style room, grey bedding, minimalist design, natural materials, soft lighting" },
+      { cn: "日式和风房间，榻榻米，纸灯笼，竹子装饰，禅意氛围", en: "Japanese style room, tatami, paper lanterns, bamboo decor, zen atmosphere" }
+    ]
+  },
+  cute_outfit: {
+    label: { cn: "可爱服装", en: "Cute Outfit" },
+    category: "item",
+    options: [
+      { cn: "黑色紧身吊带连衣裙，长度到臀部，无袖，细肩带", en: "Black tight camisole dress, hip-length, sleeveless, thin straps" },
+      { cn: "白色蕾丝连衣裙，及膝长度，短袖，优雅设计", en: "White lace dress, knee-length, short sleeves, elegant design" },
+      { cn: "粉色学院风制服，百褶裙，领结，长袖衬衫", en: "Pink school uniform, pleated skirt, bow tie, long-sleeved shirt" },
+      { cn: "蓝色吊带裙，A字型，及膝长度，夏天风格", en: "Blue spaghetti strap dress, A-line, knee-length, summer style" },
+      { cn: "红色紧身连衣裙，高领，长袖，修身设计", en: "Red tight dress, high neck, long sleeves, slim-fit design" },
+      { cn: "黄色背带裤裙，可爱风格，短款，休闲设计", en: "Yellow overall dress, cute style, short length, casual design" },
+      { cn: "紫色睡裙，丝绸材质，吊带，舒适款", en: "Purple nightgown, silk material, spaghetti straps, comfortable style" },
+      { cn: "格子图案连衣裙，英伦风格，及膝，长袖", en: "Plaid dress, British style, knee-length, long sleeves" }
+    ]
+  },
+  cute_pose_dynamic: {
+    label: { cn: "可爱动态姿势", en: "Cute Dynamic Pose" },
+    category: "action",
+    options: [
+      { cn: "向前走时回望，从正上方自信俏皮地俯视，迷人微笑", en: "Walking forward while looking back, confidently and playfully looking down from directly above, charming smile" },
+      { cn: "坐在床边，双腿交叉，手玩头发，温柔微笑", en: "Sitting on bed edge, legs crossed, playing with hair, gentle smile" },
+      { cn: "站立姿势，手放在臀部，自信直视镜头", en: "Standing pose, hands on hips, confidently looking at camera" },
+      { cn: "躺在床上，侧身支撑头部，俏皮表情", en: "Lying on bed, propping head with hand, playful expression" },
+      { cn: "跪坐姿势，双手放在膝盖上，无辜表情", en: "Kneeling pose, hands on knees, innocent expression" },
+      { cn: "靠着墙站立，一只脚抬起，酷酷的表情", en: "Leaning against wall, one foot raised, cool expression" },
+      { cn: "坐在地板上，双腿伸直，看书，专注表情", en: "Sitting on floor, legs extended, reading book, focused expression" },
+      { cn: "跳跃姿势，双手举起，快乐笑容，动态感", en: "Jumping pose, hands raised, happy smile, dynamic feel" }
+    ]
+  },
+  fitness_location: {
+    label: { cn: "健身场景", en: "Fitness Location" },
+    category: "location",
+    options: [
+      { cn: "繁忙的健身房，镜子和器械随处可见", en: "Busy gym with mirrors and equipment visible" },
+      { cn: "现代健身房，有氧区和力量区", en: "Modern gym with cardio and weight areas" },
+      { cn: "瑜伽教室，木地板和镜子", en: "Yoga studio with wooden floor and mirrors" },
+      { cn: "家庭健身区，简洁整洁", en: "Home workout area, clean and organized" },
+      { cn: "户外跑步机平台，城市天际线背景", en: "Outdoor treadmill platform with city skyline" }
+    ]
+  },
+  fitness_pose: {
+    label: { cn: "健身姿势", en: "Fitness Pose" },
+    category: "action",
+    options: [
+      { cn: "半蹲姿势，侧身对镜子", en: "Half-squat pose, turned sideways to mirror" },
+      { cn: "站立伸展，手臂高举", en: "Standing stretch with arms raised" },
+      { cn: "平板支撑姿势，侧视镜头", en: "Plank pose, side view to camera" },
+      { cn: "弓步姿势，肌肉紧绷", en: "Lunge pose, muscles tensed" },
+      { cn: "哑铃推举，专注表情", en: "Dumbbell press, focused expression" },
+      { cn: "瑜伽树式姿势，单腿站立", en: "Yoga tree pose, standing on one leg" },
+      { cn: "深蹲底部姿势，大腿发力", en: "Bottom of squat position, leg muscles engaged" },
+      { cn: "壶铃摆动，动态姿态", en: "Kettlebell swing, dynamic pose" }
+    ]
+  },
+  fitness_clothing: {
+    label: { cn: "健身服装", en: "Fitness Clothing" },
+    category: "item",
+    options: [
+      { cn: "运动裙，紧身贴身", en: "Sports skirt, tight and form-fitting" },
+      { cn: "运动短裤和运动背心", en: "Athletic shorts and sports bra" },
+      { cn: "紧身瑜伽裤和运动上衣", en: "Tight yoga leggings and athletic top" },
+      { cn: "运动套装，舒适透气", en: "Athletic set, comfortable and breathable" },
+      { cn: "健身连衣裙，时尚运动风", en: "Fitness dress, sporty and stylish" },
+      { cn: "骑行短裤和运动内衣", en: "Cycling shorts and sports bra" },
+      { cn: "压缩衣和运动长裤", en: "Compression shirt and athletic pants" },
+      { cn: "无袖运动背心和紧身裤", en: "Sleeveless sports tank and tight pants" }
+    ]
+  },
+  selfie_style: {
+    label: { cn: "自拍风格", en: "Selfie Style" },
+    category: "visual",
+    options: [
+      { cn: "原始真实的镜子自拍", en: "Raw, authentic mirror selfie" },
+      { cn: "随意的生活抓拍", en: "Candid daily life snapshot" },
+      { cn: "自然不做摆拍", en: "Natural, unposed shot" },
+      { cn: "日常生活氛围", en: "Authentic daily life atmosphere" },
+      { cn: "真实记录瞬间", en: "Genuine moment captured" }
+    ]
+  },
+  photo_effect: {
+    label: { cn: "拍照效果", en: "Photo Effect" },
+    category: "visual",
+    options: [
+      { cn: "机顶闪光灯直闪", en: "On-camera flash firing" },
+      { cn: "慢快门导致的运动模糊", en: "Motion blur from slow shutter speed" },
+      { cn: "明显的胶片颗粒感", en: "Noticeable film grain" },
+      { cn: "自然光线柔和", en: "Soft natural lighting" },
+      { cn: "高对比度戏剧光影", en: "High contrast dramatic lighting" },
+      { cn: "轻微镜头眩光", en: "Slight lens flare" },
+      { cn: "浅景深背景虚化", en: "Shallow depth of field, background blur" },
+      { cn: "暗角效果", en: "Vignette effect" }
+    ]
+  },
+  physical_state: {
+    label: { cn: "身体状态", en: "Physical State" },
+    category: "character",
+    options: [
+      { cn: "健康健美的身材", en: "Healthy athletic build" },
+      { cn: "身材苗条紧致", en: "Slim and toned physique" },
+      { cn: "肌肉线条分明", en: "Defined muscle lines" },
+      { cn: "自然匀称的体型", en: "Natural balanced physique" },
+      { cn: "柔韧灵活的身体", en: "Flexible and agile body" },
+      { cn: "力量感十足的肌肉", en: "Powerful muscular build" }
+    ]
+  },
+  sweat_appearance: {
+    label: { cn: "汗水状态", en: "Sweat Appearance" },
+    category: "character",
+    options: [
+      { cn: "头发凌乱湿透，汗水明显", en: "Hair disheveled and damp with sweat" },
+      { cn: "皮肤微微出汗，光泽感", en: "Skin slightly sweaty, glossy look" },
+      { cn: "汗珠挂在额头和鼻尖", en: "Sweat beads on forehead and nose tip" },
+      { cn: "后背汗水浸湿衣物", en: "Back sweat soaking through clothes" },
+      { cn: "汗水顺着脸颊流下", en: "Sweat streaming down cheeks" },
+      { cn: "轻微运动出汗痕迹", en: "Light exercise sweat traces" }
+    ]
+  },
+  facial_expression: {
+    label: { cn: "面部表情", en: "Facial Expression" },
+    category: "character",
+    options: [
+      { cn: "脸颊泛红，眼神迷离", en: "Cheeks flushed red, dreamy and slightly unfocused eyes" },
+      { cn: "专注严肃的表情", en: "Focused and serious expression" },
+      { cn: "笑容自然灿烂", en: "Natural and bright smile" },
+      { cn: "咬牙坚持的神情", en: "Gritted teeth, determined look" },
+      { cn: "平静放松的面容", en: "Calm and relaxed face" },
+      { cn: "眼神坚定有力", en: "Firm and powerful gaze" },
+      { cn: "运动后的满足表情", en: "Post-exercise satisfied expression" },
+      { cn: "略带疲惫但充满成就感", en: "Slightly tired but accomplished look" }
+    ]
   }
 };
 
@@ -1020,5 +1287,29 @@ export const INITIAL_DEFAULTS = {
   background_color_clean: { cn: "纯白", en: "Pure White" },
   city_glimpse_subtitle: { cn: "古韵悠长的千年古都", en: "The thousand-year-old ancient capital" },
   action_status: { cn: "玩PS5", en: "playing PS5" },
-  draw_style: { cn: "手绘漫画风格", en: "Hand-drawn Manga Style" }
+  draw_style: { cn: "手绘漫画风格", en: "Hand-drawn Manga Style" },
+  hair_style: { cn: "短发，柔和凌乱的深色头发", en: "Short, softly tousled dark hair" },
+  accessory_glasses: { cn: "戴着有轻微镜面反射的眼镜", en: "wearing glasses with mild lens reflections" },
+  // 新年海报默认值
+  clothing_style_chinese: { cn: "古典红色汉服", en: "Classical red Hanfu" },
+  clothing_color_traditional: { cn: "暗红色", en: "Dark Red" },
+  year_number: { cn: "2026", en: "2026" },
+  greeting_new_year: { cn: "马到成功", en: "Immediate Success" },
+  background_color_festive: { cn: "红色背景", en: "Red background" },
+  character_heroic: { cn: "文艺青年", en: "Artistic Youth" },
+  // 可爱动态姿势默认值
+  room_style_cute: { cn: "可爱粉色房间，粉彩床和墙壁，原创动物玩偶，妖精灯光，可爱海报，毛绒地毯", en: "Cute pink room, pastel pink bed and walls, original cute animal plushies, fairy lights, cute posters, fluffy rug" },
+  cute_outfit: { cn: "黑色紧身吊带连衣裙，长度到臀部，无袖，细肩带", en: "Black tight camisole dress, hip-length, sleeveless, thin straps" },
+  cute_pose_dynamic: { cn: "向前走时回望，从正上方自信俏皮地俯视，迷人微笑", en: "Walking forward while looking back, confidently and playfully looking down from directly above, charming smile" },
+
+  // 健身自拍场景默认值
+  fitness_location: { cn: "繁忙的健身房，镜子和器械随处可见", en: "Busy gym with mirrors and equipment visible" },
+  fitness_pose: { cn: "半蹲姿势，侧身对镜子", en: "Half-squat pose, turned sideways to mirror" },
+  fitness_clothing: { cn: "运动裙，紧身贴身", en: "Sports skirt, tight and form-fitting" },
+  selfie_style: { cn: "原始真实的镜子自拍", en: "Raw, authentic mirror selfie" },
+  photo_effect: { cn: "机顶闪光灯直闪", en: "On-camera flash firing" },
+  physical_state: { cn: "健康健美的身材", en: "Healthy athletic build" },
+  sweat_appearance: { cn: "头发凌乱湿透，汗水明显", en: "Hair disheveled and damp with sweat" },
+  facial_expression: { cn: "脸颊泛红，眼神迷离", en: "Cheeks flushed red, dreamy and slightly unfocused eyes" }
 };
+

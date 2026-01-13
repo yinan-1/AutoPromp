@@ -125,6 +125,7 @@ export const TAG_STYLES = {
   "宠物": "bg-transparent text-stone-500/90 border-orange-500/20 dark:text-stone-400/90 dark:border-orange-500/30",
   "游戏": "bg-transparent text-stone-500/90 border-orange-500/20 dark:text-stone-400/90 dark:border-orange-500/30",
   "创意": "bg-transparent text-stone-500/90 border-orange-500/20 dark:text-stone-400/90 dark:border-orange-500/30",
+  "节日": "bg-transparent text-stone-500/90 border-orange-500/20 dark:text-stone-400/90 dark:border-orange-500/30",
   "default": "bg-transparent text-stone-500/90 border-orange-500/20 dark:text-stone-400/90 dark:border-orange-500/30"
 };
 
@@ -139,7 +140,8 @@ export const TAG_LABELS = {
     "卡通": "卡通",
     "宠物": "宠物",
     "游戏": "游戏",
-    "创意": "创意"
+    "创意": "创意",
+    "节日": "节日"
   },
   en: {
     "建筑": "Architecture",
@@ -151,6 +153,7 @@ export const TAG_LABELS = {
     "卡通": "Cartoon",
     "宠物": "Pets",
     "游戏": "Gaming",
-    "创意": "Creative"
+    "创意": "Creative",
+    "节日": "Festival"
   }
 };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Share2, Download, ImageIcon } from 'lucide-react';
+import { X, Download, ImageIcon } from 'lucide-react';
+import { WaypointsIcon } from '../icons/WaypointsIcon';
 import { PremiumButton } from '../PremiumButton';
 import { getLocalized } from '../../utils/helpers';
 
@@ -33,7 +34,7 @@ const ShareImportModal = ({ isOpen, templateData, onClose, onImport, t, TAG_STYL
         <div className={`p-6 border-b flex justify-between items-center ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
           <h3 className={`text-xl font-black flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             <div className="p-2 bg-orange-500 rounded-xl text-white">
-              <Share2 size={20} />
+              <WaypointsIcon size={20} />
             </div>
             {t('import_shared_template')}
           </h3>

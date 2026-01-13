@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Analytics } from '@vercel/analytics/react';
-import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, GripVertical, Download, Upload, Image as ImageIcon, List, Undo, Redo, Maximize2, RotateCcw, LayoutGrid, Search, ArrowRight, ArrowUpRight, ArrowUpDown, RefreshCw, Sparkles, Sun, Moon, Share2, ExternalLink } from 'lucide-react';
+import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, GripVertical, Download, Upload, Image as ImageIcon, List, Undo, Redo, Maximize2, RotateCcw, LayoutGrid, Search, ArrowRight, ArrowUpRight, ArrowUpDown, RefreshCw, Sparkles, Sun, Moon, ExternalLink } from 'lucide-react';
+import { WaypointsIcon } from './components/icons/WaypointsIcon';
 import html2canvas from 'html2canvas';
 
 // ====== 导入数据配置 ======
@@ -21,10 +22,10 @@ import { generateAITerms } from './utils/aiService';  // AI 服务
 import { useStickyState, useAsyncStickyState, useEditorHistory, useLinkageGroups, useShareFunctions, useTemplateManagement } from './hooks';
 
 // ====== 导入 UI 组件 ======
-import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplateEditor, TemplatesSidebar, BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar } from './components';
+import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplateEditor, TemplatesSidebar, BanksSidebar, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar, TagSidebar } from './components';
 import { ImagePreviewModal, AnimatedSlogan, MobileAnimatedSlogan } from './components/preview';
 import { MobileBottomNav } from './components/mobile';
-import { ShareOptionsModal, ImportTokenModal, ShareImportModal } from './components/modals';
+import { ShareOptionsModal, ImportTokenModal, ShareImportModal, CategoryManagerModal } from './components/modals';
 import { DataUpdateNotice, AppUpdateNotice } from './components/notifications';
 
 
@@ -38,7 +39,7 @@ import { DataUpdateNotice, AppUpdateNotice } from './components/notifications';
 
 const App = () => {
   // 当前应用代码版本 (必须与 package.json 和 version.json 一致)
-  const APP_VERSION = "0.7.1";
+  const APP_VERSION = "0.7.2";
 
   // 临时功能：瀑布流样式管理
   const [masonryStyleKey, setMasonryStyleKey] = useState('poster');
@@ -108,7 +109,7 @@ const App = () => {
   const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
   
   // UI State
-  const [bankSidebarWidth, setBankSidebarWidth] = useStickyState(420, "app_bank_sidebar_width_v1"); // Default width increased to 420px for 2-column layout
+  const [bankSidebarWidth, setBankSidebarWidth] = useStickyState(300, "app_bank_sidebar_width_v1"); // Default width reduced to 300px for more editor space
   const [isResizing, setIsResizing] = useState(false);
   
   // 检测是否为移动设备
@@ -634,6 +635,7 @@ const App = () => {
     currentShareUrl,
     isGenerating,
     isPrefetching,
+    prefetchedShortCode,
     setSharedTemplateData,
     setShowShareImportModal,
     setShowShareOptionsModal,
@@ -704,20 +706,74 @@ const App = () => {
     handleAddCustomAndSelectFromHook(key, index, newValue, setActivePopover);
   }, [handleAddCustomAndSelectFromHook]);
 
-  // AI 生成词条处理函数（占位实现）
+  // AI 生成词条处理函数（增强版：支持上下文感知 + 联动组清理）
   const handleGenerateAITerms = React.useCallback(async (params) => {
     console.log('[App] AI Generation Request:', params);
 
-    // 调用 AI 服务生成词条
+    // 收集当前模板中已选择的所有变量值，用于 AI 上下文理解
+    const selectedValues = {};
+    if (activeTemplate?.selections) {
+      // 第一步：解析 selections，按 baseKey 分组
+      const selectionsByBaseKey = {};
+      Object.entries(activeTemplate.selections).forEach(([key, value]) => {
+        // key 格式可能是 "subject-0", "clothing_1-2" 等
+        const parts = key.split('-');
+        const varKey = parts[0]; // "subject" 或 "clothing_1"
+        const index = parts[1]; // "0" 或 "2"
+
+        // 提取 baseKey（去掉数字后缀）
+        const baseKey = varKey.replace(/_\d+$/, '');
+
+        if (!selectionsByBaseKey[baseKey]) {
+          selectionsByBaseKey[baseKey] = [];
+        }
+
+        selectionsByBaseKey[baseKey].push({
+          fullKey: key,
+          index: index ? parseInt(index) : -1,  // 改为 -1，确保带 -N 的键优先
+          value: value
+        });
+      });
+
+      // 第二步：对于每个 baseKey，只保留索引最大的值（最新的选择）
+      Object.entries(selectionsByBaseKey).forEach(([baseKey, items]) => {
+        // 按索引降序排序，带 -N 的键会排在前面
+        items.sort((a, b) => b.index - a.index);
+
+        if (items.length > 1) {
+          console.log(`[App] 检测到联动组变量 ${baseKey}，使用最新值:`, items[0].fullKey, '=', items[0].value, '，忽略旧值:', items.slice(1).map(i => i.fullKey));
+        }
+
+        const latest = items[0];
+
+        // 过滤掉当前正在生成的变量
+        const currentVarBaseKey = params.variableId.replace(/_\d+$/, '');
+        if (baseKey !== currentVarBaseKey) {
+          // 提取实际的显示值（支持双语对象）
+          let displayValue = latest.value;
+          if (typeof latest.value === 'object' && latest.value !== null) {
+            displayValue = latest.value[language] || latest.value.cn || latest.value.en || JSON.stringify(latest.value);
+          }
+          selectedValues[latest.fullKey] = displayValue;
+        }
+      });
+    }
+
+    console.log('[App] Selected values for AI context:', selectedValues);
+
+    // 调用 AI 服务生成词条，传递已选择的值
     try {
-      const result = await generateAITerms(params);
+      const result = await generateAITerms({
+        ...params,
+        selectedValues  // 新增：传递用户已选择的变量值
+      });
       console.log('[App] AI Generation Result:', result);
       return result;
     } catch (error) {
       console.error('[App] AI Generation Error:', error);
       throw error;
     }
-  }, []);
+  }, [activeTemplate, language]);
 
   // 分享相关函数已移至 useShareFunctions Hook
 
@@ -1103,6 +1159,14 @@ const App = () => {
   // Filter templates based on tags for sidebar
   const filteredTemplates = React.useMemo(() => {
     return discoveryTemplates.filter(t => {
+      // Search filter
+      const query = searchQuery.toLowerCase();
+      const name = typeof t.name === 'object' ? Object.values(t.name).join(' ') : t.name;
+      const content = typeof t.content === 'object' ? Object.values(t.content).join(' ') : t.content;
+      const matchesSearch = query === "" || 
+        name.toLowerCase().includes(query) || 
+        content.toLowerCase().includes(query);
+
       // Tag filter
       const matchesTags = selectedTags === "" || 
         (t.tags && t.tags.includes(selectedTags));
@@ -1113,9 +1177,9 @@ const App = () => {
         (selectedLibrary === "official" && isOfficial) ||
         (selectedLibrary === "personal" && !isOfficial);
 
-      return matchesTags && matchesLibrary;
+      return matchesSearch && matchesTags && matchesLibrary;
     });
-  }, [discoveryTemplates, selectedTags, selectedLibrary]);
+  }, [discoveryTemplates, selectedTags, selectedLibrary, searchQuery]);
 
   const fileInputRef = useRef(null);
   
@@ -2378,6 +2442,8 @@ const App = () => {
             sortOrder={sortOrder}
             setSortOrder={setSortOrder}
             setRandomSeed={setRandomSeed}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             globalContainerStyle={globalContainerStyle}
             themeMode={themeMode}
             setThemeMode={setThemeMode}
@@ -2386,24 +2452,34 @@ const App = () => {
             setSelectedTags={setSelectedTags}
             selectedLibrary={selectedLibrary}
             setSelectedLibrary={setSelectedLibrary}
+            handleAddTemplate={handleAddTemplate}
             TEMPLATE_TAGS={TEMPLATE_TAGS}
           />
         ) : (
           <div className="flex-1 flex gap-2 lg:gap-4 overflow-hidden">
-            <TemplatesSidebar 
+            {/* Tag Sidebar - 仅在桌面端显示 */}
+            {!isMobileDevice && (
+              <TagSidebar
+                TEMPLATE_TAGS={TEMPLATE_TAGS}
+                selectedTags={selectedTags}
+                selectedLibrary={selectedLibrary}
+                setSelectedTags={setSelectedTags}
+                setSelectedLibrary={setSelectedLibrary}
+                isDarkMode={isDarkMode}
+                language={language}
+              />
+            )}
+
+            <TemplatesSidebar
               mobileTab={mobileTab}
               isTemplatesDrawerOpen={isTemplatesDrawerOpen}
               setIsTemplatesDrawerOpen={setIsTemplatesDrawerOpen}
               setDiscoveryView={handleSetDiscoveryView}
               activeTemplateId={activeTemplateId}
-              setActiveTemplateId={setActiveTemplateId} 
+              setActiveTemplateId={setActiveTemplateId}
               filteredTemplates={filteredTemplates}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              selectedTags={selectedTags}
-              setSelectedTags={setSelectedTags}
-              TEMPLATE_TAGS={TEMPLATE_TAGS}
-              displayTag={displayTag}
               handleRefreshSystemData={handleRefreshSystemData}
               language={language}
               setLanguage={setLanguage}
@@ -2651,6 +2727,7 @@ const App = () => {
         onCopyLink={doCopyShareLink}
         onCopyToken={handleShareToken}
         shareUrl={currentShareUrl}
+        shareCode={prefetchedShortCode}
         isGenerating={isGenerating}
         isPrefetching={isPrefetching}
         isDarkMode={isDarkMode}
@@ -2687,6 +2764,34 @@ const App = () => {
         newBankCategory={newBankCategory}
         setNewBankCategory={setNewBankCategory}
         onConfirm={handleAddBank}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* --- Category Manager Modal --- */}
+      <CategoryManagerModal
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+        categories={categories}
+        setCategories={setCategories}
+        banks={banks}
+        setBanks={setBanks}
+        t={t}
+        language={language}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* --- Insert Variable Modal --- */}
+      <InsertVariableModal
+        isOpen={isInsertModalOpen}
+        onClose={() => setIsInsertModalOpen(false)}
+        categories={categories}
+        banks={banks}
+        onSelect={(key) => {
+          insertVariableToTemplate(key);
+          setIsInsertModalOpen(false);
+        }}
+        t={t}
+        language={language}
         isDarkMode={isDarkMode}
       />
 

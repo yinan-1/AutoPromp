@@ -1,7 +1,8 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { PremiumButton } from '../PremiumButton';
-import { CopyIcon, Share2 } from 'lucide-react';
+import { CopyIcon } from 'lucide-react';
+import { WaypointsIcon } from '../icons/WaypointsIcon';
 
 /**
  * 分享选项弹窗组件
@@ -15,9 +16,12 @@ import { CopyIcon, Share2 } from 'lucide-react';
  * @param {boolean} props.isGenerating - 是否正在生成短码
  * @param {boolean} props.isDarkMode - 是否暗色模式
  * @param {string} props.language - 当前语言
+ * @param {string} props.shareCode - 分享码
  */
-const ShareOptionsModal = ({ isOpen, onClose, onCopyLink, onCopyToken, shareUrl, isGenerating, isPrefetching, isDarkMode, language }) => {
+const ShareOptionsModal = ({ isOpen, onClose, onCopyLink, onCopyToken, shareUrl, shareCode, isGenerating, isPrefetching, isDarkMode, language }) => {
   if (!isOpen) return null;
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div
@@ -38,9 +42,28 @@ const ShareOptionsModal = ({ isOpen, onClose, onCopyLink, onCopyToken, shareUrl,
           <h3 className={`text-xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             {language === 'cn' ? '分享模版' : 'Share Template'}
           </h3>
-          <p className={`text-xs font-bold mb-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          <p className={`text-xs font-bold mb-6 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             {language === 'cn' ? '选择您喜欢的分享方式' : 'Choose your preferred sharing method'}
           </p>
+
+          {/* 分享码展示区域 */}
+          {(shareCode || isPrefetching) && (
+            <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-500">
+              <div className="relative h-14 w-full flex items-center justify-center overflow-hidden">
+                {isPrefetching ? (
+                  <div className="flex gap-1.5 items-center">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-orange-500/40 animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-3xl font-black tracking-[0.2em] select-all bg-clip-text text-transparent bg-gradient-to-br from-orange-400 to-orange-600 drop-shadow-sm">
+                    {shareCode}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             <PremiumButton
@@ -61,12 +84,13 @@ const ShareOptionsModal = ({ isOpen, onClose, onCopyLink, onCopyToken, shareUrl,
               </div>
             </PremiumButton>
 
+            {/* 暂时注释口令分享按钮
             <PremiumButton
               onClick={onCopyToken}
               disabled={isGenerating}
               isDarkMode={isDarkMode}
               className="w-full size-lg"
-              icon={Share2}
+              icon={WaypointsIcon}
               justify="start"
             >
               <div className="flex flex-col items-start ml-2 text-left">
@@ -78,19 +102,29 @@ const ShareOptionsModal = ({ isOpen, onClose, onCopyLink, onCopyToken, shareUrl,
                 </span>
               </div>
             </PremiumButton>
+            */}
 
             {/* 新增：手动复制区域 */}
             {(shareUrl || isPrefetching) && (
-              <div className={`mt-6 p-4 rounded-2xl border ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
-                <p className={`text-[10px] font-bold mb-2 uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  {language === 'cn' ? '无法自动复制？请手动长按复制链接：' : 'CAN\'T AUTO-COPY? PLEASE LONG-PRESS TO COPY:'}
+              <div className="mt-8">
+                <p className={`text-[10px] font-black mb-3 uppercase tracking-widest ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {language === 'cn' 
+                    ? `无法自动复制？请手动${isMobile ? '长按' : ''}复制链接：` 
+                    : `CAN'T AUTO-COPY? PLEASE ${isMobile ? 'LONG-PRESS' : ''} TO COPY:`}
                 </p>
-                <div className={`text-xs font-mono break-all p-3 rounded-xl border select-all max-h-[72px] overflow-y-auto scrollbar-hide ${isDarkMode ? 'bg-black/30 border-white/10 text-gray-300' : 'bg-white border-gray-200 text-gray-600'}`}>
-                  {isPrefetching ? (
-                    <span className="opacity-50 italic">{language === 'cn' ? '短链接生成中...' : 'Generating short link...'}</span>
-                  ) : (
-                    shareUrl
-                  )}
+                <div className={`premium-search-container group ${isDarkMode ? 'dark' : 'light'} !rounded-2xl`}>
+                    <div className={`
+                      text-xs font-mono break-all p-4 select-all max-h-[80px] overflow-y-auto scrollbar-hide
+                      ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}
+                    `}>
+                      {isPrefetching ? (
+                        <span className="opacity-40 italic font-bold tracking-tight">
+                          {language === 'cn' ? '短链接生成中...' : 'Generating short link...'}
+                        </span>
+                      ) : (
+                        shareUrl
+                      )}
+                    </div>
                 </div>
               </div>
             )}

@@ -1,5 +1,5 @@
 {
-  "version": "0.8.1",
+  "version": "0.8.4",
   "config": [
     {
       "id": "tpl_default",
@@ -923,6 +923,10 @@
         "en": "### High-end Fashion Magazine Cover - FOCUS\nA high-end fashion magazine cover. The character is {{character_originality}}, with a confident and avant-garde aura, strong body tension, dynamic pose, staring straight at the camera.\n\n**Visual Core:**\n- **Wardrobe:** {{clothing}}, modern editorial styling.\n- **Action:** The model's hands form a \"viewfinder\" gesture, as if interacting with a rectangular selection box that covers the face and shoulders.\n- **Rule:** Only the area inside the selection box is sharp and in natural color; the area outside the box is entirely grayscale and heavily pixelated, with no color or clear regions.\n\n**Photography & Lighting:**\n- **Angle:** Low-angle shot looking up.\n- **Lighting:** Soft diffused studio lighting.\n\n**Layout & Typography:**\n- **Top:** Centered bold uppercase wide sans-serif title \"FOCUS\", with \"DECEMBER 2025\" in small text above it; \"VOL + random 2 digits\" at the bottom left of the title.\n- **Bottom Left:** Text block (short confident fashion title, short paragraph, barcode).\n- **Right:** \"FASHION INTERVIEW\"; \"THE EDIT\" in small serif font and a \"random 01-09 digit\" in large font at the bottom right.\n- **Layering:** The model overlaps/occludes the title, creating clear depth and a clean, modern look.\n- **Color:** All fonts are white, in a montage style, creating a strong contrast between text and image.\n\n**Specifications:**\n- **Aspect Ratio:** {{ratio}}"
       },
       "imageUrl": "https://s3.bmp.ovh/imgs/2025/12/29/ebe3e34755c3ef2e.png",
+      "imageUrls": [
+        "https://s3.bmp.ovh/imgs/2025/12/29/ebe3e34755c3ef2e.png",
+        "https://s3.bmp.ovh/imgs/2026/01/09/c5b49962fae9dfa3.jpg "
+      ],
       "author": "Latte(@0xbisc)",
       "selections": {
         "character_originality": {
@@ -1133,6 +1137,342 @@
         "人物",
         "摄影",
         "创意"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_daily_snapshot",
+      "name": {
+        "cn": "日常氛围快照",
+        "en": "Daily Snapshot"
+      },
+      "content": {
+        "cn": "### 日常生活快照 (Daily Snapshot)\n\n**场景设定:**\n{{background_scene}}。\n\n**摄影风格:**\n{{lighting}}。画面没有经过精心的构图或布光，呈现出最真实的记录感。\n\n**人物特征:**\n主体为{{subject}}，采用{{clothing}}。{{accessory_glasses}}。\n\n**动态与构图:**\n{{action_status}}。采用{{camera_angle}}。\n\n**服饰风味:**\n{{underwear_style}}。\n\n**画幅:**\n{{ratio}}",
+        "en": "### Daily Snapshot\n\n**Scene Setting:**\n{{background_scene}}.\n\n**Photography Style:**\n{{lighting}}. Not carefully composed or lit, presenting an authentic sense of recording.\n\n**Character Features:**\nThe subject is {{subject}}, with a {{clothing}}. {{accessory_glasses}}.\n\n**Action & Composition:**\n{{action_status}}. Using an {{camera_angle}}.\n\n**Outfit Style:**\n{{underwear_style}}.\n\n**Aspect Ratio:**\n{{ratio}}"
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/08/599f54de89ca6198.jpg",
+      "author": "underwood（@underwoodxie96）",
+      "selections": {
+        "background_scene": {
+          "cn": "昏暗、平凡的房间，身后有一面素墙",
+          "en": "Dark, ordinary room with a plain wall behind the subject"
+        },
+        "lighting": {
+          "cn": "随意的肖像摄影，带有日常快照氛围",
+          "en": "Casual portrait photography with a daily snapshot vibe"
+        },
+        "clothing": {
+          "cn": "略显成熟的“大姐姐”时尚风格",
+          "en": "Slightly mature 'onee-san' fashion style"
+        },
+        "accessory_glasses": {
+          "cn": "戴着有轻微镜面反射的眼镜",
+          "en": "wearing glasses with mild lens reflections"
+        },
+        "action_status": {
+          "cn": "坐在沙发上，正随意地玩着手机",
+          "en": "Sitting on a sofa, casually playing on her phone"
+        },
+        "camera_angle": {
+          "cn": "上半身特写",
+          "en": "upper-body close-up"
+        },
+        "underwear_style": {
+          "cn": "“纯欲风”服饰",
+          "en": "'pure-seductive' outfit style"
+        },
+        "subject": {
+          "cn": "女性，约20岁",
+          "en": "Female, around 20 years old"
+        },
+        "ratio": {
+          "cn": "3:4竖构图",
+          "en": "3:4 Vertical"
+        }
+      },
+      "tags": [
+        "人物",
+        "摄影"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_surveillance_still",
+      "name": {
+        "cn": "隐藏相机监控视角",
+        "en": "Surveillance Still"
+      },
+      "content": {
+        "cn": "### 隐藏摄像机 / 监控画面 (Surveillance Still)\n\n**相机设置:**\n{{camera_angle}}。隐藏拍摄视角，具有{{lighting}}。\n\n**人物主体:**\n主体为{{character_originality}}。留着{{hair_style}}。{{action_status}}。她身穿{{clothing}}。\n\n**环境背景:**\n{{background_scene}}。氛围安静、私密且亲密。\n\n**智能识别 (Overlay):**\n- **脸部锁定:** 红色半透明矩形框精准锁定面部，带有交叉瞄准线。\n- **局部特写:** 右上角浮动放大窗口，4倍变焦特写眼睛细节，显示抓拍的高光。\n- **状态指示:** 屏幕边缘显示红点 REC 指示器及警告文本：“ALERT: SUBJECT AWARE / EYE CONTACT DETECTED”。\n- **时间戳:** 角落带有复古胶片时间戳 “[REC] 23:47:32 | CAM 04 - DRESSING RM”。\n\n**构图与氛围:**\n主体位于画面中心，目光直视镜头。呈现出一种脆弱、紧张且极具临场感的瞬间。\n\n**画幅:**\n{{ratio}}",
+        "en": "### Surveillance Still / Hidden Camera Footage\n\n**Camera Settings:**\n{{camera_angle}}. Hidden perspective with {{lighting}}.\n\n**Subject:**\nThe subject is {{character_originality}}, with {{hair_style}}. {{action_status}}. She is wearing {{clothing}}.\n\n**Environment:**\n{{background_scene}}. The atmosphere is quiet, private, and intimate.\n\n**Face Detection & Overlay:**\n- **Face Lock:** A faint red rectangular bounding box with crosshair locked intensely on her face.\n- **Zoom Inset:** Floating top-right zoom-in inset (4.0x ratio), focusing on her eyes with clear catchlight.\n- **Alert Text:** \"ALERT: SUBJECT AWARE / EYE CONTACT DETECTED\" displayed on screen.\n- **Rec Indicator:** Red 'REC' indicator and vintage timestamp \"[REC] 23:47:32 | CAM 04 - DRESSING RM\" in the corner.\n\n**Composition:**\nSubject centered, direct gaze into the lens. The tone is vulnerable, tense, and surprising.\n\n**Aspect Ratio:**\n{{ratio}}"
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/08/ff4ac4b4171f41f5.jpg",
+      "author": "@YaseenK7212",
+      "selections": {
+        "character_originality": {
+          "cn": "年轻韩国女团偶像",
+          "en": "Young Korean female K-pop idol"
+        },
+        "hair_style": {
+          "cn": "黑色直发，垂在肩上",
+          "en": "Black straight hair, falling over shoulders"
+        },
+        "action_status": {
+          "cn": "换衣时惊讶地抬头直视镜头",
+          "en": "frozen in surprise, looking directly into the lens while changing"
+        },
+        "clothing": {
+          "cn": "半脱的灰色大号连帽衫，露出白色吊带",
+          "en": "half-removed oversized grey hoodie, revealing white camisole"
+        },
+        "background_scene": {
+          "cn": "昏暗舒适的后台更衣室或私密宿舍",
+          "en": "dimly lit, cozy backstage dressing room or private dorm room"
+        },
+        "lighting": {
+          "cn": "隐藏相机拍摄风格，Portra 400 胶片质感",
+          "en": "Hidden camera style, Portra 400 film grain aesthetic"
+        },
+        "camera_angle": {
+          "cn": "平视、略微隐藏的中景镜头",
+          "en": "eye-level, slightly hidden intimate medium shot"
+        },
+        "ratio": {
+          "cn": "3:4竖构图",
+          "en": "3:4 Vertical"
+        }
+      },
+      "tags": [
+        "人物",
+        "摄影",
+        "创意"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_fine_art_garden",
+      "name": {
+        "cn": "唯美花园艺术人像",
+        "en": "Fine-art Garden Portrait"
+      },
+      "content": {
+        "cn": "### 唯美艺术花园人像 (Fine-art Garden Portrait)\n\n**核心目标:**\n创作一张充满浪漫、空灵氛围的花园艺术人像。\n\n**人物设定:**\n主体为{{subject}}。她留着{{hair_style}}，神情平静内敛，带着淡淡的忧郁。{{action_status}}。她穿着{{clothing}}。\n\n**环境与氛围:**\n{{background_scene}}。画面中充满了繁茂的开花植物和柔和的绿植。{{flower_type}}，被微风捕捉到半空中的动态。\n\n**构图与摄影:**\n采用{{camera_angle}}。优雅的中心构图，极浅的景深，背景是奶油般细腻的虚化效果。使用{{lens_param}}拍摄。\n\n**光影与色彩:**\n{{lighting}}。色调以柔和的绿色、青色、淡桃色和白色为主。呈现出一种绘画般的、低饱和度的浪漫色调。\n\n**艺术风格:**\n{{role}}。追求极高的织物纹理和皮肤质感。\n\n**画幅:**\n{{ratio}}",
+        "en": "### Dreamy Fine-art Garden Portrait\n\n**Objective:**\nCreate a dreamy fine-art portrait with a romantic, ethereal garden atmosphere.\n\n**Subject Details:**\nThe subject is {{subject}}. She has {{hair_style}}, with a calm, introspective, slightly melancholic expression. {{action_status}}. She is wearing {{clothing}}.\n\n**Scene & Atmosphere:**\n{{background_scene}}. The frame is filled with abundant flowering plants and soft greenery. {{flower_type}}, caught mid-motion by a gentle breeze.\n\n**Composition & Photography:**\nA {{camera_angle}}. Elegant, centered composition with a shallow depth of field and creamy bokeh. Shot with a {{lens_param}}.\n\n**Lighting & Color:**\n{{lighting}}. The color palette includes muted greens, soft teals, and pale peach/white accents. Painterly, desaturated, romantic tones.\n\n**Art Direction:**\n{{role}}. Ultra-detailed fabric and natural skin texture.\n\n**Aspect Ratio:**\n{{ratio}}"
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/08/d325cd6ce1727205.jpg",
+      "author": "Taaruk(@Taaruk_)",
+      "selections": {
+        "subject": {
+          "cn": "女性角色",
+          "en": "Female Character"
+        },
+        "hair_style": {
+          "cn": "短发，柔和凌乱的深色头发",
+          "en": "Short, softly tousled dark hair"
+        },
+        "action_status": {
+          "cn": "温柔地凝视着镜头，带着淡淡的忧郁",
+          "en": "Looking gently toward the camera, with a touch of melancholy"
+        },
+        "clothing": {
+          "cn": "柔和青色复古碎花连衣裙",
+          "en": "Muted teal floral dress with subtle vintage patterns"
+        },
+        "background_scene": {
+          "cn": "盛开的郁郁葱葱的花园",
+          "en": "Lush garden in full bloom"
+        },
+        "flower_type": {
+          "cn": "白色和淡桃色花瓣在空中飘落",
+          "en": "White and pale peach flower petals drifting through the air"
+        },
+        "camera_angle": {
+          "cn": "腰部以上的美术肖像",
+          "en": "Waist-up fine-art portrait"
+        },
+        "lens_param": {
+          "cn": "85mm, f/1.8",
+          "en": "85mm, f/1.8"
+        },
+        "lighting": {
+          "cn": "阴天下的柔和自然光",
+          "en": "Soft natural light under overcast sky"
+        },
+        "role": {
+          "cn": "美术摄影与电影写实风格",
+          "en": "Fine-art photography blended with cinematic realism"
+        },
+        "ratio": {
+          "cn": "2:3竖构图",
+          "en": "2:3 Vertical"
+        }
+      },
+      "tags": [
+        "人物",
+        "摄影",
+        "创意"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_chinese_new_year_poster",
+      "name": {
+        "cn": "中国新年时尚海报",
+        "en": "Chinese New Year Fashion Poster"
+      },
+      "content": {
+        "cn": "### 中国新年时尚海报\n\n一张现代时尚感的中国新年海报，融合高端时尚摄影与传统节日元素，极具视觉冲击力和艺术美感。\n\n**核心主体：**\n{{character_originality}}，面部和颈部极致特写，{{character_heroic}}骑着白马优雅而富有力量地冲向屏幕，呈现出即将跃出取景框的瞬间动态。这是一位普通的中国人，穿着精心设计的{{clothing_style_chinese}}，色彩为{{clothing_color_traditional}}，面部表情自然亲切而富有生活气息，妆容精致淡雅，发型柔美自然，颈部线条优美修长。人物嘴里轻轻叼着一个精致的中国红包，增添节日趣味和喜庆氛围。\n\n**构图与摄影：**\n- 超近距离的面部和颈部特写，人物几乎填满整个画面\n- 极浅景深让背景柔化模糊，形成美丽的光斑效果\n- 精准控制的动态模糊，马尾和发丝轻柔飘动，展现优雅动感\n- 人物和马仿佛要跃出取景框，突破画面边界，带来强烈的视觉冲击\n- 高端时尚摄影的布光技巧，完美轮廓光勾勒人物轮廓和颈部线条\n- 时尚杂志级别的精修质感，皮肤光滑细腻，五官立体精致，颈部优美\n- 荷兰角构图，增强现代时尚感和动态张力\n\n**细节刻画：**\n- 面部细节：完美妆容，皮肤细腻光滑，眼神明亮有神，嘴角的红包增添俏皮感\n- 红包细节：精致的中国红包，金色吉祥图案，轻微反光质感\n- 服装质感：高级面料质感，精致工艺细节，剪裁合体\n- 马匹细节：干净整洁，皮毛健康光泽，鬃毛柔顺飘逸\n- 光影效果：高级时尚布光，层次丰富，色彩精致饱满，红包上的金色图案闪烁\n\n**背景与氛围：**\n- 真实感的广袤草原背景，极具纵深感和空间感\n- 天空呈现壮丽的红色夕阳，晚霞染红整个天际，营造浪漫氛围\n- 夕阳的暖色调光辉洒在人物和马匹身上，形成金色轮廓光\n- 背景虚化处理，草原与红色天空的交界线柔和自然\n- 整体色调为温暖优雅的橙红色调，营造时尚而喜庆的视觉冲击力\n\n**摄影风格：**\n- 极具艺术吸引力的顶级时尚摄影，富士胶片魅力\n- Fujicolor Velvia风格，色彩浓郁饱满，对比度适中偏柔\n- 轻微的胶片颗粒质感，增添高端复古艺术气息\n- 时尚杂志级景深控制，主体清晰突出，背景柔美虚化\n- 光线层次丰富，暗部和亮部细节保留完整\n- 具有强烈的时尚美感和视觉吸引力\n\n**摄影规格：**\n{{ratio}}\n高分辨率，时尚海报级品质，Fuji胶片摄影风格",
+        "en": "### Chinese New Year Fashion Poster\n\nA modern fashionable Chinese New Year poster blending high-end fashion photography with traditional festive elements, featuring strong visual impact and artistic beauty.\n\n**Core Subject:**\n{{character_originality}}, extreme face and neck close-up. {{character_heroic}} rides a white horse elegantly yet powerfully charging towards the screen, capturing the moment of about to leap out of frame. This is an ordinary Chinese person wearing exquisitely designed {{clothing_style_chinese}} in {{clothing_color_traditional}}, with natural friendly expression full of life, delicate light makeup, soft natural grooming, and elegant slender neck. The character gently holds a refined Chinese red envelope in their mouth, adding festive fun and celebratory atmosphere.\n\n**Composition & Photography:**\n- Ultra-close face and neck shot, the character nearly fills the entire frame\n- Extremely shallow depth of field makes background soft and blurred, forming beautiful bokeh effects\n- Precisely controlled motion blur, mane and hair gently flowing, showing elegant dynamic\n- Character and horse appear about to leap out of the frame, breaking the visual boundary with strong impact\n- High-end fashion lighting techniques, perfect rim light outlining character silhouette and neck lines\n- Fashion magazine grade retouched quality, smooth refined skin, sculpted facial features, elegant neck\n- Dutch angle composition enhancing modern fashion sense and dynamic tension\n\n**Detail Rendering:**\n- Facial details: perfect makeup, smooth refined skin, bright expressive eyes, red envelope at corner of mouth adding playfulness\n- Red envelope details: exquisite Chinese red envelope, golden auspicious patterns, subtle reflective texture\n- Clothing texture: premium fabric quality, exquisite craftsmanship, tailored fit\n- Horse details: clean and tidy, healthy coat sheen, smooth flowing mane\n- Lighting effects: high-end fashion lighting, rich layers, exquisite vibrant colors, golden patterns on red envelope shimmering\n\n**Background & Atmosphere:**\n- Realistic vast grassland background with immense depth and spatial sense\n- Magnificent red sunset sky, the afterglow dyes the entire horizon creating romantic atmosphere\n- Warm sunset glow showers on the character and horse, forming golden rim light\n- Background bokeh treatment, the horizon line of grassland and red sky is soft and natural\n- Overall color tone is warm elegant orange-red, creating fashionable yet festive visual impact\n\n**Photography Style:**\n- Top-tier artistic fashion photography with Fuji film charm\n- Fujicolor Velvia style, rich and vibrant colors, moderate soft contrast\n- Subtle film grain texture adding high-end vintage artistic atmosphere\n- Fashion magazine grade depth of field control, main subject sharp and prominent, background beautifully blurred\n- Rich lighting layers, complete detail retention in shadows and highlights\n- Strong fashion aesthetic and visual appeal\n\n**Photography Specs:**\n{{ratio}}\nHigh resolution, fashion poster grade quality, Fuji film photography style"
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/09/83205df357ad8c1c.jpg",
+      "author": "@tanshilong",
+      "selections": {
+        "character_originality": {
+          "cn": "创作一个原创人物",
+          "en": "Create an original character"
+        },
+        "character_heroic": {
+          "cn": "文艺青年",
+          "en": "Artistic Youth"
+        },
+        "clothing_style_chinese": {
+          "cn": "古典红色汉服",
+          "en": "Classical red Hanfu"
+        },
+        "clothing_color_traditional": {
+          "cn": "暗红色",
+          "en": "Dark Red"
+        },
+        "ratio": {
+          "cn": "2:3竖构图",
+          "en": "2:3 Vertical"
+        }
+      },
+      "tags": [
+        "创意",
+        "人物",
+        "时尚",
+        "节日"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_cute_dynamic_portrait",
+      "name": {
+        "cn": "可爱动态人像",
+        "en": "Cute Dynamic Portrait"
+      },
+      "content": {
+        "cn": "### 可爱动态人像\n\n**房间环境**:\n{{room_style_cute}}\n\n**角色**:\n20岁前半的日本女大学生。\n\n**摄影参数**:\n- 极端的地板级别低角度虫视视角\n- {{lens_type}}的畸变让她看起来很巨大的构图\n- {{cute_pose_dynamic}}\n\n**服装**:\n{{cute_outfit}}，随着动作自然摇摆。\n\n**道具**:\n右手拿着和房间里一样的可爱动物毛绒玩具（粉色或白色的熊或兔子），自然地轻轻遮挡裙子后面的姿势。完全看不到内衣。\n\n**光影**:\n温暖的室内照明和窗户射入的自然光，妖精灯的柔和光辉，对肌肤友好的高光。\n\n**氛围**:\n充满自信、满童心、可爱又有点性感、动态的室内肖像照。",
+        "en": "### Cute Dynamic Portrait\n\n**Room Environment**:\n{{room_style_cute}}\n\n**Character**:\nJapanese female college student, early 20s.\n\n**Photography Parameters**:\n- Extreme floor-level low-angle worm's-eye view\n- Composition with {{lens_type}} distortion making her appear massive\n- {{cute_pose_dynamic}}\n\n**Outfit**:\n{{cute_outfit}}, swaying naturally with movement.\n\n**Prop**:\nHolding a small cute animal plushie (pink or white bear/rabbit) in right hand, naturally posing to lightly hide the back of skirt. Underwear absolutely not visible.\n\n**Lighting**:\nWarm indoor lighting and natural light from window, soft glow of fairy lights, gentle highlights on skin.\n\n**Atmosphere**:\nConfident, full of playfulness, cute yet slightly sexy, dynamic indoor portrait.\n\n**Note**:\nCopyright characters and existing anime styles are strictly prohibited."
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/10/9e64b198ccc9663a.jpg",
+      "author": "M7(@mi7_crypto)",
+      "selections": {
+        "room_style_cute": {
+          "cn": "可爱粉色房间，粉彩床和墙壁，原创动物玩偶，妖精灯光，可爱海报，毛绒地毯",
+          "en": "Cute pink room, pastel pink bed and walls, original cute animal plushies, fairy lights, cute posters, fluffy rug"
+        },
+        "lens_type": {
+          "cn": "20mm 广角镜头",
+          "en": "20mm wide-angle lens"
+        },
+        "cute_pose_dynamic": {
+          "cn": "向前走时回望，从正上方自信俏皮地俯视，迷人微笑",
+          "en": "Walking forward while looking back, confidently and playfully looking down from directly above, charming smile"
+        },
+        "cute_outfit": {
+          "cn": "黑色紧身吊带连衣裙，长度到臀部，无袖，细肩带",
+          "en": "Black tight camisole dress, hip-length, sleeveless, thin straps"
+        },
+        "lighting": {
+          "cn": "温暖的室内自然光，从窗射入，柔和的妖精灯在背景中",
+          "en": "Warm indoor natural light streaming through window, soft fairy lights in background"
+        },
+        "camera_angle": {
+          "cn": "极低角度虫视，床高度",
+          "en": "Extreme low-angle worm's-eye view, bed height"
+        }
+      },
+      "tags": [
+        "人物",
+        "摄影",
+        "创意"
+      ],
+      "language": [
+        "cn",
+        "en"
+      ]
+    },
+    {
+      "id": "tpl_fitness_selfie",
+      "name": {
+        "cn": "健身自拍场景",
+        "en": "Fitness Selfie Scene"
+      },
+      "content": {
+        "cn": "### 健身自拍场景 (Fitness Selfie)\n\n**核心氛围:**\n一张原始真实的镜子自拍快照，在繁忙的健身房用机顶闪光灯直闪拍摄。\n\n**主体人物:**\n一位年轻漂亮的江南女子，拥有\"网红\"脸庞和温婉的东方魅力，呈现{{physical_state}}。她正在做{{fitness_pose}}，侧身对着镜子，手持智能手机。\n\n**服装与外观:**\n穿着{{fitness_clothing}}。头发{{sweat_appearance}}，脸颊泛红，显示刚完成运动的明显痕迹。\n\n**面部表情:**\n{{facial_expression}}\n\n**场景细节:**\n{{fitness_location}}\n\n**拍照风格:**\n{{selfie_style}}\n\n**技术效果:**\n照片具有明显的{{photo_effect}}，营造出真实、不做摆拍的日常生活氛围。\n\n**规格:**\n画幅: {{ratio}} --niji 7",
+        "en": "### Fitness Selfie Scene\n\n**Core Atmosphere:**\nA raw, candid mirror selfie snapshot taken in a busy gym with an on-camera flash firing.\n\n**Subject:**\nA young pretty Chinese Jiangnan woman with a \"wanghong\" face and gentle Eastern charm, with {{physical_state}}. She is in a {{fitness_pose}}, turned sideways to the mirror, holding a smartphone.\n\n**Clothing & Appearance:**\nWearing {{fitness_clothing}}. Hair is {{sweat_appearance}}, and cheeks are flushed red, showing clear signs of a recent workout.\n\n**Facial Expression:**\n{{facial_expression}}\n\n**Scene Details:**\n{{fitness_location}}\n\n**Selfie Style:**\n{{selfie_style}}\n\n**Technical Effects:**\nThe photo has noticeable {{photo_effect}}, creating an authentic, unposed daily life atmosphere.\n\n**Specifications:**\nAspect Ratio: {{ratio}} --niji 7"
+      },
+      "imageUrl": "https://s3.bmp.ovh/imgs/2026/01/13/9413347206a80484.png",
+      "author": "@tanshilong",
+      "selections": {
+        "physical_state": {
+          "cn": "健康健美的身材",
+          "en": "Healthy athletic build"
+        },
+        "fitness_pose": {
+          "cn": "半蹲姿势，侧身对镜子",
+          "en": "Half-squat pose, turned sideways to mirror"
+        },
+        "fitness_clothing": {
+          "cn": "运动裙，紧身贴身",
+          "en": "Sports skirt, tight and form-fitting"
+        },
+        "sweat_appearance": {
+          "cn": "头发凌乱湿透，汗水明显",
+          "en": "Hair disheveled and damp with sweat"
+        },
+        "facial_expression": {
+          "cn": "脸颊泛红，眼神迷离",
+          "en": "Cheeks flushed red, dreamy and slightly unfocused eyes"
+        },
+        "fitness_location": {
+          "cn": "繁忙的健身房，镜子和器械随处可见",
+          "en": "Busy gym with mirrors and equipment visible"
+        },
+        "selfie_style": {
+          "cn": "原始真实的镜子自拍",
+          "en": "Raw, authentic mirror selfie"
+        },
+        "photo_effect": {
+          "cn": "慢快门导致的运动模糊",
+          "en": "Motion blur from slow shutter speed"
+        },
+        "ratio": {
+          "cn": "3:4竖构图",
+          "en": "3:4 vertical portrait"
+        }
+      },
+      "tags": [
+        "人物",
+        "摄影",
+        "卡通"
       ],
       "language": [
         "cn",

@@ -11,7 +11,6 @@ dist
 
 # Misc
 .DS_Store
-AppLogo.png
 .env
 .env.local
 .env.development.local
@@ -46,7 +45,12 @@ App-clean.jsx
 # Tauri (Desktop App)
 src-tauri/
 
-# Project Management & Internal Notes
-skills.md
-release_checklist.md
-CLAUDE.md
+# Reference projects (for learning only)
+skill-prompt-generator-main/
+
+# Backend server code (managed separately)
+后端/
+后端index.js
+
+.claude/
+.cursor/
